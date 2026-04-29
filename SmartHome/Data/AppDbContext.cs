@@ -12,6 +12,8 @@ public class AppDbContext : DbContext
     public DbSet<ClassNode> ClassNodes => Set<ClassNode>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<MeasureUnit> MeasureUnits => Set<MeasureUnit>();
+    public DbSet<EnumClass> EnumClasses => Set<EnumClass>();
+    public DbSet<EnumValue> EnumValues => Set<EnumValue>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -73,12 +75,55 @@ public class AppDbContext : DbContext
                 .HasForeignKey(x => x.ClassNodeId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+        
+        modelBuilder.Entity<EnumClass>(entity =>
+        {
+            entity.ToTable("enum_class");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Name).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ShortName).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ValueType).IsRequired();
+            entity.Property(x => x.SortOrder).IsRequired();
+
+            entity.HasIndex(x => x.Name).IsUnique();
+            entity.HasIndex(x => x.ShortName).IsUnique();
+            entity.HasIndex(x => x.SortOrder);
+
+            entity.HasOne(x => x.MeasureUnit)
+                .WithMany(x => x.EnumClasses)
+                .HasForeignKey(x => x.MeasureUnitId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<EnumValue>(entity =>
+        {
+            entity.ToTable("enum_value");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.StringValue).HasMaxLength(512);
+            entity.Property(x => x.IconValue).HasMaxLength(512);
+            entity.Property(x => x.DisplayName).HasMaxLength(512);
+            entity.Property(x => x.NumberValue).HasColumnType("numeric(18, 4)");
+            entity.Property(x => x.SortOrder).IsRequired();
+
+            entity.HasIndex(x => x.EnumClassId);
+            entity.HasIndex(x => new { x.EnumClassId, x.SortOrder }).IsUnique();
+
+            entity.HasOne(x => x.EnumClass)
+                .WithMany(x => x.Values)
+                .HasForeignKey(x => x.EnumClassId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<MeasureUnit>().HasData(
             new MeasureUnit { Id = 1, Name = "Штука", ShortName = "шт." },
             new MeasureUnit { Id = 2, Name = "Комплект", ShortName = "компл." },
             new MeasureUnit { Id = 3, Name = "Зона", ShortName = "зона" },
-            new MeasureUnit { Id = 4, Name = "Канал", ShortName = "канал" }
+            new MeasureUnit { Id = 4, Name = "Канал", ShortName = "канал" },
+            new MeasureUnit { Id = 5, Name = "Ватт", ShortName = "Вт" }
         );
 
         modelBuilder.Entity<ClassNode>().HasData(
@@ -369,6 +414,171 @@ public class AppDbContext : DbContext
                 Name = "Xiaomi Temperature and Humidity Sensor",
                 ShortName = "xiaomi-temp-humidity",
                 ClassNodeId = 23
+            }
+        );
+
+        modelBuilder.Entity<EnumClass>().HasData(
+            new EnumClass
+            {
+                Id = 1,
+                Name = "Тип подключения",
+                ShortName = "connection-kind",
+                ValueType = EnumValueType.String,
+                SortOrder = 1,
+                MeasureUnitId = null
+            },
+            new EnumClass
+            {
+                Id = 2,
+                Name = "Протокол связи",
+                ShortName = "communication-protocol",
+                ValueType = EnumValueType.String,
+                SortOrder = 2,
+                MeasureUnitId = null
+            },
+            new EnumClass
+            {
+                Id = 3,
+                Name = "Мощность лампы",
+                ShortName = "lamp-power",
+                ValueType = EnumValueType.Number,
+                SortOrder = 3,
+                MeasureUnitId = 5
+            },
+            new EnumClass
+            {
+                Id = 4,
+                Name = "Иконка устройства",
+                ShortName = "device-icon",
+                ValueType = EnumValueType.Icon,
+                SortOrder = 4,
+                MeasureUnitId = null
+            }
+        );
+
+        modelBuilder.Entity<EnumValue>().HasData(
+            new EnumValue
+            {
+                Id = 1,
+                EnumClassId = 1,
+                StringValue = "Проводное",
+                NumberValue = null,
+                IconValue = null,
+                DisplayName = "Проводное подключение",
+                SortOrder = 1
+            },
+            new EnumValue
+            {
+                Id = 2,
+                EnumClassId = 1,
+                StringValue = "Беспроводное",
+                NumberValue = null,
+                IconValue = null,
+                DisplayName = "Беспроводное подключение",
+                SortOrder = 2
+            },
+            new EnumValue
+            {
+                Id = 3,
+                EnumClassId = 1,
+                StringValue = "Гибридное",
+                NumberValue = null,
+                IconValue = null,
+                DisplayName = "Гибридное подключение",
+                SortOrder = 3
+            },
+
+            new EnumValue
+            {
+                Id = 4,
+                EnumClassId = 2,
+                StringValue = "Wi-Fi",
+                NumberValue = null,
+                IconValue = null,
+                DisplayName = "Wi-Fi",
+                SortOrder = 1
+            },
+            new EnumValue
+            {
+                Id = 5,
+                EnumClassId = 2,
+                StringValue = "Zigbee",
+                NumberValue = null,
+                IconValue = null,
+                DisplayName = "Zigbee",
+                SortOrder = 2
+            },
+            new EnumValue
+            {
+                Id = 6,
+                EnumClassId = 2,
+                StringValue = "Bluetooth",
+                NumberValue = null,
+                IconValue = null,
+                DisplayName = "Bluetooth",
+                SortOrder = 3
+            },
+
+            new EnumValue
+            {
+                Id = 7,
+                EnumClassId = 3,
+                StringValue = null,
+                NumberValue = 5,
+                IconValue = null,
+                DisplayName = "5 Вт",
+                SortOrder = 1
+            },
+            new EnumValue
+            {
+                Id = 8,
+                EnumClassId = 3,
+                StringValue = null,
+                NumberValue = 9,
+                IconValue = null,
+                DisplayName = "9 Вт",
+                SortOrder = 2
+            },
+            new EnumValue
+            {
+                Id = 9,
+                EnumClassId = 3,
+                StringValue = null,
+                NumberValue = 12,
+                IconValue = null,
+                DisplayName = "12 Вт",
+                SortOrder = 3
+            },
+
+            new EnumValue
+            {
+                Id = 10,
+                EnumClassId = 4,
+                StringValue = null,
+                NumberValue = null,
+                IconValue = "lightbulb",
+                DisplayName = "Лампочка",
+                SortOrder = 1
+            },
+            new EnumValue
+            {
+                Id = 11,
+                EnumClassId = 4,
+                StringValue = null,
+                NumberValue = null,
+                IconValue = "thermostat",
+                DisplayName = "Термостат",
+                SortOrder = 2
+            },
+            new EnumValue
+            {
+                Id = 12,
+                EnumClassId = 4,
+                StringValue = null,
+                NumberValue = null,
+                IconValue = "camera",
+                DisplayName = "Камера",
+                SortOrder = 3
             }
         );
     }

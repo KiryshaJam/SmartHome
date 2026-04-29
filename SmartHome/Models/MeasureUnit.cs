@@ -15,4 +15,6 @@ public class MeasureUnit
     public string ShortName { get; set; } = null!;
 
     public ICollection<ClassNode> ClassNodes { get; set; } = new List<ClassNode>();
+    
+    public ICollection<EnumClass> EnumClasses { get; set; } = new List<EnumClass>();
 }
