@@ -1,0 +1,16 @@
+namespace SmartHome.DTOs;
+
+public class ProductWithParametersDto
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; } = null!;
+
+    public string ShortName { get; set; } = null!;
+
+    public int ClassNodeId { get; set; }
+
+    public string ClassNodeName { get; set; } = null!;
+
+    public List<ProductParameterValueDto> Parameters { get; set; } = new();
+}

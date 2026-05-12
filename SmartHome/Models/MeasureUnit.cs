@@ -17,4 +17,5 @@ public class MeasureUnit
     public ICollection<ClassNode> ClassNodes { get; set; } = new List<ClassNode>();
     
     public ICollection<EnumClass> EnumClasses { get; set; } = new List<EnumClass>();
+    public ICollection<ParameterDefinition> ParameterDefinitions { get; set; } = new List<ParameterDefinition>();
 }

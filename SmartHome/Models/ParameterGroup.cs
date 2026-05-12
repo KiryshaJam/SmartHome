@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SmartHome.Models;
 
-public class Product
+public class ParameterGroup
 {
     public int Id { get; set; }
 
@@ -14,9 +14,7 @@ public class Product
     [MaxLength(128)]
     public string ShortName { get; set; } = null!;
 
-    [Required]
-    public int ClassNodeId { get; set; }
+    public int SortOrder { get; set; }
 
-    public ClassNode ClassNode { get; set; } = null!;
-    public ICollection<ProductParameterValue> ParameterValues { get; set; } = new List<ProductParameterValue>();
+    public ICollection<ClassParameter> ClassParameters { get; set; } = new List<ClassParameter>();
 }

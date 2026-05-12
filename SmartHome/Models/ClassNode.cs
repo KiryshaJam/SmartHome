@@ -28,4 +28,6 @@ public class ClassNode
     public MeasureUnit? MeasureUnit { get; set; }
 
     public ICollection<Product> Products { get; set; } = new List<Product>();
+    
+    public ICollection<ClassParameter> ClassParameters { get; set; } = new List<ClassParameter>();
 }

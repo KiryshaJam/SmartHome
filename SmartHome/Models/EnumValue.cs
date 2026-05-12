@@ -23,4 +23,5 @@ public class EnumValue
     public string? DisplayName { get; set; }
 
     public int SortOrder { get; set; }
+    public ICollection<ProductParameterValue> ProductParameterValues { get; set; } = new List<ProductParameterValue>();
 }
