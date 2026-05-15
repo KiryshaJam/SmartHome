@@ -1,0 +1,206 @@
+:root {
+  --bg-deep: #0c1222;
+  --bg-surface: #111a2e;
+  --bg-elevated: #182440;
+  --bg-muted: #1e2f4d;
+  --border: rgba(125, 211, 252, 0.12);
+  --text: #e8f1ff;
+  --text-muted: #94a8c9;
+  --accent: #38bdf8;
+  --accent-soft: rgba(56, 189, 248, 0.15);
+  --warm: #fbbf24;
+  --warm-soft: rgba(251, 191, 36, 0.12);
+  --success: #4ade80;
+  --danger: #f87171;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 18px 50px rgba(2, 12, 27, 0.55);
+  font-family: "DM Sans", system-ui, sans-serif;
+  color: var(--text);
+  background: var(--bg-deep);
+  line-height: 1.5;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(56, 189, 248, 0.14), transparent),
+    radial-gradient(900px 500px at 100% 0%, rgba(251, 191, 36, 0.08), transparent),
+    var(--bg-deep);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 1rem;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #38bdf8, #22d3ee);
+  color: #041019;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(34, 211, 238, 0.25);
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.btn-warm {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a0f00;
+  font-weight: 600;
+}
+
+.btn-danger {
+  background: rgba(248, 113, 113, 0.2);
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.card {
+  background: linear-gradient(165deg, rgba(24, 36, 64, 0.95), rgba(17, 26, 46, 0.98));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.input,
+select.input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: rgba(12, 18, 34, 0.65);
+  color: var(--text);
+  font: inherit;
+}
+
+.input:focus,
+select.input:focus {
+  outline: 2px solid rgba(56, 189, 248, 0.35);
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.error-banner {
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #fecaca;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.badge-terminal {
+  color: #6ee7b7;
+  border-color: rgba(110, 231, 183, 0.35);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.badge-folder {
+  color: var(--accent);
+  border-color: rgba(56, 189, 248, 0.35);
+  background: var(--accent-soft);
+}
+
+.table-wrap {
+  overflow: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+table.data th,
+table.data td {
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+table.data th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+table.data tr:hover td {
+  background: rgba(56, 189, 248, 0.06);
+}
+
+table.data tr.selected td {
+  background: var(--warm-soft);
+}
