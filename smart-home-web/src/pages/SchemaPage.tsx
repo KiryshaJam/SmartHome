@@ -30,9 +30,7 @@ const enumClassValueLabels: { v: 1 | 2 | 3; label: string }[] = [
 ];
 
 function sectionTitle(text: string) {
-  return (
-    <h2 style={{ margin: "0 0 0.75rem", fontSize: "1.15rem", fontWeight: 700, color: "var(--warm)" }}>{text}</h2>
-  );
+  return <h2 className="section-title">{text}</h2>;
 }
 
 export function SchemaPage() {
@@ -273,14 +271,14 @@ export function SchemaPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: "900px" }}>
       <header>
-        <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Справочники параметров</h1>
+        <h1 className="page-title">Справочники параметров</h1>
         <p className="hint" style={{ marginTop: "0.35rem" }}>
           Группы (как «Подключение»), глобальные свойства вроде «Дальность действия», единицы измерения и привязка свойств к классу изделия.
         </p>
       </header>
       {err && <div className="error-banner">{err}</div>}
 
-      <div className="card" style={{ padding: "1.15rem" }}>
+      <div className="card">
         {sectionTitle("Единицы измерения")}
         <p className="hint" style={{ marginBottom: "0.75rem" }}>
           Например метр для дальности — добавьте при необходимости и выберите её в описании числового параметра.
@@ -323,7 +321,7 @@ export function SchemaPage() {
         </form>
       </div>
 
-      <div className="card" style={{ padding: "1.15rem" }}>
+      <div className="card">
         {sectionTitle("Группы параметров")}
         <p className="hint" style={{ marginBottom: "0.75rem" }}>
           Логические блоки на карточке изделия (например «Подключение», «Радиоканал»).
@@ -374,10 +372,10 @@ export function SchemaPage() {
         </form>
       </div>
 
-      <div className="card" style={{ padding: "1.15rem" }}>
+      <div className="card">
         {sectionTitle("Типы перечислений")}
         <p className="hint" style={{ marginBottom: "0.75rem" }}>
-          Нужны для параметров типа «Перечисление». Значения списка задаются в API отдельно (например через Swagger) или уже есть в базе.
+          Нужны для параметров типа «Перечисление».
         </p>
         <div className="table-wrap" style={{ marginBottom: "1rem", maxHeight: "180px" }}>
           <table className="data">
@@ -450,7 +448,7 @@ export function SchemaPage() {
         </form>
       </div>
 
-      <div className="card" style={{ padding: "1.15rem" }}>
+      <div className="card">
         {sectionTitle("Описания параметров (глобальные свойства)")}
         <p className="hint" style={{ marginBottom: "0.75rem" }}>
           Здесь создаётся само свойство, например «Дальность действия» с типом «вещественное число» и единицей «м».
@@ -545,7 +543,7 @@ export function SchemaPage() {
         </form>
       </div>
 
-      <div className="card" style={{ padding: "1.15rem" }}>
+      <div className="card">
         {sectionTitle("Привязка к классу изделия")}
         <p className="hint" style={{ marginBottom: "0.75rem" }}>
           Выберите класс в иерархии и добавьте к нему свойство (из уже созданных описаний), укажите группу — ту же, что «Подключение», или новую.

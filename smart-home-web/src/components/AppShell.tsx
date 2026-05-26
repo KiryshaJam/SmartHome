@@ -20,34 +20,13 @@ export function AppShell({
   children: ReactNode;
 }) {
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "280px 1fr",
-        minHeight: "100vh",
-      }}
-    >
-      <aside
-        className="card"
-        style={{
-          margin: "1.25rem",
-          marginRight: 0,
-          padding: "1.35rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.25rem",
-          borderRadius: "var(--radius)",
-        }}
-      >
+    <div className="app-layout">
+      <aside className="app-sidebar">
         <div>
-          <div style={{ fontSize: "1.35rem", fontWeight: 700, letterSpacing: "-0.02em" }}>
-            Умный дом
-          </div>
-          <div className="hint" style={{ marginTop: "0.25rem" }}>
-            Каталог и параметры изделий
-          </div>
+          <div className="sidebar-brand">Умный дом</div>
+          <div className="sidebar-tagline">Каталог и параметры изделий</div>
         </div>
-        <nav style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+        <nav className="app-nav">
           {nav.map((item) => {
             const isActive = item.id === active;
             return (
@@ -55,32 +34,22 @@ export function AppShell({
                 key={item.id}
                 type="button"
                 onClick={() => onNavigate(item.id)}
-                className="btn-ghost"
-                style={{
-                  textAlign: "left",
-                  padding: "0.75rem 0.85rem",
-                  border: isActive
-                    ? "1px solid rgba(56, 189, 248, 0.45)"
-                    : "1px solid var(--border)",
-                  background: isActive ? "var(--accent-soft)" : "transparent",
-                }}
+                className={isActive ? "nav-item nav-item--active" : "nav-item"}
               >
-                <div style={{ fontWeight: 600 }}>{item.label}</div>
-                <div className="hint" style={{ fontSize: "0.78rem" }}>
-                  {item.desc}
-                </div>
+                <div className="nav-item__label">{item.label}</div>
+                <div className="nav-item__desc">{item.desc}</div>
               </button>
             );
           })}
         </nav>
-        <div style={{ marginTop: "auto", fontSize: "0.78rem", color: "var(--text-muted)" }}>
+        <div className="sidebar-api">
           API:{" "}
           <span className="mono">
             {import.meta.env.DEV ? "proxy /api → localhost:5156" : import.meta.env.VITE_API_URL ?? "—"}
           </span>
         </div>
       </aside>
-      <main style={{ padding: "1.25rem", minWidth: 0 }}>{children}</main>
+      <main className="app-main">{children}</main>
     </div>
   );
 }

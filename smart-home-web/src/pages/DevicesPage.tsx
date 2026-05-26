@@ -150,7 +150,7 @@ export function DevicesPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <header style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "flex-end" }}>
         <div style={{ flex: "1 1 240px" }}>
-          <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Устройства</h1>
+          <h1 className="page-title">Устройства</h1>
           <p className="hint" style={{ marginTop: "0.35rem" }}>
             Каталог изделий и редактирование значений параметров класса.
           </p>
@@ -162,7 +162,7 @@ export function DevicesPage() {
       {err && <div className="error-banner">{err}</div>}
 
       {createOpen && (
-        <form className="card" style={{ padding: "1.15rem", display: "grid", gap: "0.75rem", maxWidth: "480px" }} onSubmit={(e) => void handleCreate(e)}>
+        <form className="card" style={{ display: "grid", gap: "0.75rem", maxWidth: "480px" }} onSubmit={(e) => void handleCreate(e)}>
           <div style={{ fontWeight: 600 }}>Новое устройство</div>
           <div>
             <label htmlFor="dn">Название</label>
@@ -202,9 +202,9 @@ export function DevicesPage() {
           alignItems: "start",
         }}
       >
-        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ padding: "0.85rem 1rem", borderBottom: "1px solid var(--border)" }}>
-            <span style={{ fontWeight: 600 }}>Каталог</span>
+        <div className="card card--flush">
+          <div className="card-header">
+            <span>Каталог</span>
             <span className="hint" style={{ marginLeft: "0.5rem" }}>
               {products ? `${products.length} шт.` : ""}
             </span>
@@ -252,7 +252,7 @@ export function DevicesPage() {
           </div>
         </div>
 
-        <div className="card" style={{ padding: "1.15rem", minHeight: "280px" }}>
+        <div className="card" style={{ minHeight: "280px" }}>
           {!selectedId && <div className="hint">Выберите устройство слева.</div>}
           {selectedId && loadingCard && <div className="hint">Загрузка карточки…</div>}
           {selectedId && !loadingCard && card && selectedProduct && (
@@ -390,13 +390,7 @@ function AddParameterToClassSection({
   if (available.length === 0) {
     return (
       <div
-        className="card"
-        style={{
-          padding: "0.85rem",
-          background: "rgba(12, 18, 34, 0.35)",
-          boxShadow: "none",
-          marginBottom: "0.5rem",
-        }}
+        className="card-nested" style={{ marginBottom: "0.5rem" }}
       >
         <div style={{ fontWeight: 600, marginBottom: "0.35rem" }}>Новый параметр у устройства</div>
         <p className="hint" style={{ margin: 0 }}>
@@ -409,13 +403,7 @@ function AddParameterToClassSection({
 
   return (
     <div
-      className="card"
-      style={{
-        padding: "0.85rem",
-        background: "rgba(12, 18, 34, 0.35)",
-        boxShadow: "none",
-        marginBottom: "1rem",
-      }}
+      className="card-nested" style={{ marginBottom: "1rem" }}
     >
       <div style={{ fontWeight: 600, marginBottom: "0.35rem" }}>Добавить параметр к классу этого устройства</div>
       <p className="hint" style={{ margin: "0 0 0.75rem" }}>
@@ -531,7 +519,7 @@ function ProductCardView({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div>
-        <div style={{ fontSize: "1.25rem", fontWeight: 700 }}>{product.name}</div>
+        <div style={{ fontSize: "20px", fontWeight: 600, color: "var(--text-primary)" }}>{product.name}</div>
         <div className="hint">
           <span className="mono">{product.shortName}</span>
           {" · "}
@@ -541,7 +529,7 @@ function ProductCardView({
       <AddParameterToClassSection product={product} card={card} onAdded={onSaved} />
       {grouped.map(([groupName, params]) => (
         <div key={groupName}>
-          <div style={{ fontWeight: 600, marginBottom: "0.5rem", color: "var(--warm)" }}>{groupName}</div>
+          <div className="group-title">{groupName}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
             {params.map((p) => (
               <ParameterRow
@@ -643,12 +631,7 @@ function ParameterRow({
 
   return (
     <div
-      className="card"
-      style={{
-        padding: "0.85rem",
-        background: "rgba(12, 18, 34, 0.35)",
-        boxShadow: "none",
-      }}
+      className="card-nested"
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", flexWrap: "wrap" }}>
         <div>

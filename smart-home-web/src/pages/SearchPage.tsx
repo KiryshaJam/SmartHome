@@ -141,14 +141,14 @@ export function SearchPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <header>
-        <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Поиск</h1>
+        <h1 className="page-title">Поиск</h1>
         <p className="hint" style={{ marginTop: "0.35rem" }}>
           Выберите класс изделия и при необходимости уточните фильтр по одному из параметров этого класса.
         </p>
       </header>
       {err && <div className="error-banner">{err}</div>}
 
-      <form className="card" style={{ padding: "1.15rem", display: "grid", gap: "0.85rem", maxWidth: "560px" }} onSubmit={(e) => void runSearch(e)}>
+      <form className="card" style={{ display: "grid", gap: "0.85rem", maxWidth: "560px" }} onSubmit={(e) => void runSearch(e)}>
         <div>
           <label htmlFor="sc">Класс изделия</label>
           <select
@@ -187,14 +187,7 @@ export function SearchPage() {
 
         {selectedParam && (
           <div
-            className="card"
-            style={{
-              padding: "1rem",
-              background: "rgba(12, 18, 34, 0.35)",
-              boxShadow: "none",
-              display: "grid",
-              gap: "0.65rem",
-            }}
+            className="card-nested" style={{ display: "grid", gap: "0.65rem" }}
           >
             <div className="hint">
               Тип:{" "}
