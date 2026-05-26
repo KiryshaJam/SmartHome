@@ -123,3 +123,4 @@
 /Users/kirillivankov/RiderProjects/SmartHome/SmartHome/obj/Debug/net10.0/SmartHome.pdb
 /Users/kirillivankov/RiderProjects/SmartHome/SmartHome/obj/Debug/net10.0/SmartHome.genruntimeconfig.cache
 /Users/kirillivankov/RiderProjects/SmartHome/SmartHome/obj/Debug/net10.0/ref/SmartHome.dll
+/Users/kirillivankov/RiderProjects/SmartHome/SmartHome/obj/Debug/net10.0/SmartHome.sourcelink.json
