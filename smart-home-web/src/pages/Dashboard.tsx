@@ -32,7 +32,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (v: AppView) => void }) 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
       <header>
-        <h1 style={{ margin: 0, fontSize: "1.75rem", fontWeight: 700 }}>Обзор</h1>
+        <h1 className="page-title">Обзор</h1>
       </header>
       {err && <div className="error-banner">{err}</div>}
       <div
@@ -42,20 +42,20 @@ export function Dashboard({ onNavigate }: { onNavigate: (v: AppView) => void }) 
           gap: "1rem",
         }}
       >
-        <div className="card" style={{ padding: "1.15rem" }}>
+        <div className="card">
           <div className="hint">Устройств в каталоге</div>
-          <div style={{ fontSize: "2rem", fontWeight: 700, marginTop: "0.25rem" }}>
+          <div className="stat-value">
             {products ? products.length : "—"}
           </div>
         </div>
-        <div className="card" style={{ padding: "1.15rem" }}>
+        <div className="card">
           <div className="hint">Классов в иерархии</div>
-          <div style={{ fontSize: "2rem", fontWeight: 700, marginTop: "0.25rem" }}>
+          <div className="stat-value">
             {classes ? classes.length : "—"}
           </div>
         </div>
       </div>
-      <div className="card" style={{ padding: "1.15rem" }}>
+      <div className="card">
         <div style={{ fontWeight: 600, marginBottom: "0.75rem" }}>Быстрые переходы</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
           <button type="button" className="btn-ghost" onClick={() => onNavigate("classifier")}>

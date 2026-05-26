@@ -18,13 +18,7 @@ function TreeBranch({
   const rowSel = selectedId === node.id;
 
   return (
-    <div
-      style={{
-        marginLeft: depth ? "0.85rem" : 0,
-        borderLeft: depth ? "1px dashed var(--border)" : "none",
-        paddingLeft: depth ? "0.65rem" : 0,
-      }}
-    >
+    <div className={depth ? "tree-branch tree-branch--nested" : "tree-branch"}>
       <div
         onClick={() => onSelect(node.id)}
         onKeyDown={(e) => {
@@ -35,23 +29,12 @@ function TreeBranch({
         }}
         role="button"
         tabIndex={0}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "0.5rem",
-          padding: "0.35rem 0.4rem",
-          flexWrap: "wrap",
-          borderRadius: "8px",
-          cursor: "pointer",
-          background: rowSel ? "var(--warm-soft)" : undefined,
-          outline: "none",
-        }}
+        className={rowSel ? "tree-row tree-row--selected" : "tree-row"}
       >
         {hasChildren ? (
           <button
             type="button"
-            className="btn-ghost"
-            style={{ padding: "0.2rem 0.45rem", minWidth: "1.75rem" }}
+            className="btn-ghost tree-toggle"
             onClick={(e) => {
               e.stopPropagation();
               setOpen((o) => !o);
@@ -61,9 +44,9 @@ function TreeBranch({
             {open ? "▼" : "▶"}
           </button>
         ) : (
-          <span style={{ width: "1.75rem", display: "inline-block" }} />
+          <span className="tree-spacer" />
         )}
-        <span className="mono" style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>
+        <span className="mono hint">
           {node.shortName}
         </span>
         <span style={{ fontWeight: 600 }}>{node.name}</span>
@@ -231,13 +214,13 @@ export function ClassifierPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <header>
-        <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Классификатор</h1>
+        <h1 className="page-title">Классификатор</h1>
         <p className="hint" style={{ marginTop: "0.35rem" }}>
           Кликните по узлу, чтобы выбрать родителя для нового класса. Можно добавить корневой узел или ветвь ниже выбранного.
         </p>
       </header>
       {err && <div className="error-banner">{err}</div>}
-      <div className="card" style={{ padding: "1.15rem" }}>
+      <div className="card">
         {loadingRoots && <div className="hint">Загрузка корней…</div>}
         {roots && roots.length === 0 && <div className="hint">Корневые узлы не найдены.</div>}
         {roots && roots.length > 1 && (
@@ -260,7 +243,7 @@ export function ClassifierPage() {
           return (
             <div key={r.id} style={{ marginBottom: "1.25rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-                <h2 style={{ margin: 0, fontSize: "1.1rem" }}>{r.name}</h2>
+                <h2 className="subsection-title">{r.name}</h2>
                 {!tree && roots.length > 1 && (
                   <button type="button" className="btn-primary" onClick={() => void loadTree(r.id)}>
                     Показать дерево
@@ -281,7 +264,7 @@ export function ClassifierPage() {
         })}
       </div>
 
-      <div className="card" style={{ padding: "1.15rem", maxWidth: "560px" }}>
+      <div className="card" style={{ maxWidth: "560px" }}>
         <h2 style={{ margin: "0 0 0.75rem", fontSize: "1.1rem" }}>Новый узел классификатора</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.75rem" }}>
           <button
