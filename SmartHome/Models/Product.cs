@@ -18,4 +18,5 @@ public class Product
     public int ClassNodeId { get; set; }
 
     public ClassNode ClassNode { get; set; } = null!;
+    public ICollection<ProductParameterValue> ParameterValues { get; set; } = new List<ProductParameterValue>();
 }

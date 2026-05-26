@@ -1,0 +1,458 @@
+:root {
+  --bg-page: #1C1F26;
+  --bg-card: #252A34;
+  --bg-input: #263347;
+  --border: #3A3F4B;
+
+  --accent: #00BCD4;
+  --accent-soft: rgba(6, 182, 212, 0.15);
+  --accent-secondary: #F59E0B;
+  --accent-secondary-soft: rgba(245, 158, 11, 0.12);
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --error-bg: #450a0a;
+  --error-border: #ef4444;
+  --error-text: #fca5a5;
+
+  --success-bg: #052e16;
+  --success-border: #22c55e;
+  --success-text: #86efac;
+
+  --warning-bg: #431407;
+  --warning-border: #f59e0b;
+  --warning-text: #fcd34d;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+
+  /* legacy aliases for existing var() references */
+  --bg-deep: var(--bg-page);
+  --bg-surface: var(--bg-card);
+  --bg-elevated: var(--bg-input);
+  --bg-muted: var(--bg-input);
+  --text: var(--text-primary);
+  --warm: var(--accent-secondary);
+  --warm-soft: var(--accent-secondary-soft);
+
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  line-height: 1.5;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.mono {
+  font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+a:hover {
+  opacity: 0.85;
+  text-decoration: underline;
+}
+
+/* ——— Layout ——— */
+
+.app-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  width: 240px;
+  background: var(--bg-page);
+  border-right: 1px solid var(--border);
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.app-main {
+  padding: 1.25rem;
+  min-width: 0;
+  background: var(--bg-page);
+}
+
+.sidebar-brand {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sidebar-tagline {
+  margin-top: 0.25rem;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.nav-item {
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.nav-item:hover:not(:disabled) {
+  opacity: 0.85;
+  color: var(--text-primary);
+}
+
+.nav-item--active {
+  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--accent);
+}
+
+.nav-item__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: inherit;
+}
+
+.nav-item--active .nav-item__label {
+  color: var(--accent);
+}
+
+.nav-item__desc {
+  margin-top: 0.15rem;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.nav-item--active .nav-item__desc {
+  color: var(--text-secondary);
+}
+
+.sidebar-api {
+  margin-top: auto;
+  font-size: 11px;
+  font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  color: var(--text-muted);
+}
+
+/* ——— Typography ——— */
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.section-title {
+  margin: 0 0 0.75rem;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.stat-value {
+  margin-top: 0.25rem;
+  font-size: 28px;
+  font-weight: 700;
+  font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  color: var(--text-primary);
+}
+
+.group-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+}
+
+/* ——— Buttons ——— */
+
+button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  transition: opacity 0.15s ease;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--bg-page);
+}
+
+.btn-warm {
+  background: var(--accent-secondary);
+  color: var(--bg-page);
+}
+
+.btn-ghost {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.btn-danger {
+  background: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
+}
+
+/* ——— Cards ——— */
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+}
+
+.card-nested {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem;
+}
+
+.card--flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.subsection-title {
+  margin: 0 0 0.75rem;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ——— Forms ——— */
+
+.input,
+select.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.input:focus,
+select.input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.hint {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+/* ——— Alerts ——— */
+
+.error-banner {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.success-banner {
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.warning-banner {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning-text);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+/* ——— Badges ——— */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.badge-terminal {
+  color: var(--success-text);
+  border-color: var(--success-border);
+  background: var(--success-bg);
+}
+
+.badge-folder {
+  color: var(--accent);
+  border-color: var(--border);
+  background: var(--accent-soft);
+}
+
+/* ——— Tables ——— */
+
+.table-wrap {
+  overflow: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.table-wrap--plain {
+  border: none;
+}
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+table.data th,
+table.data td {
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+table.data th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+table.data td strong,
+table.data td [style*="font-weight: 600"] {
+  color: var(--text-primary);
+}
+
+table.data tr:hover td {
+  background: var(--accent-soft);
+}
+
+table.data tr.selected td {
+  background: var(--accent-soft);
+}
+
+/* ——— Classifier tree ——— */
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.4rem;
+  flex-wrap: wrap;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.tree-row:hover {
+  opacity: 0.85;
+}
+
+.tree-row--selected {
+  background: var(--accent-soft);
+}
+
+.tree-branch {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.tree-branch--nested {
+  margin-left: 0.85rem;
+  border-left: 1px dashed var(--border);
+  padding-left: 0.65rem;
+}
+
+.tree-toggle {
+  padding: 0.2rem 0.45rem;
+  min-width: 1.75rem;
+}
+
+.tree-spacer {
+  width: 1.75rem;
+  display: inline-block;
+}
