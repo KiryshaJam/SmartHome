@@ -52,6 +52,7 @@ export interface ProductParameterValueDto {
   parameterGroupName: string | null;
   sortOrder: number;
   isRequired: boolean;
+  isInherited: boolean;
   minNumberValue: number | null;
   maxNumberValue: number | null;
   measureUnitId: number | null;

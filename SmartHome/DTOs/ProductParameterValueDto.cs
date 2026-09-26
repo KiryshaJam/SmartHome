@@ -28,6 +28,8 @@ public class ProductParameterValueDto
 
     public bool IsRequired { get; set; }
 
+    public bool IsInherited { get; set; }
+
     public decimal? MinNumberValue { get; set; }
 
     public decimal? MaxNumberValue { get; set; }
