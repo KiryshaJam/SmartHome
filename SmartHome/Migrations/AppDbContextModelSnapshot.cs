@@ -955,6 +955,11 @@ namespace SmartHome.Migrations
                     b.Property<int>("ClassNodeId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsDraft")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -982,6 +987,7 @@ namespace SmartHome.Migrations
                         {
                             Id = 1,
                             ClassNodeId = 7,
+                            IsDraft = true,
                             Name = "Xiaomi Smart LED Bulb",
                             ShortName = "xiaomi-led-bulb"
                         },
@@ -989,6 +995,7 @@ namespace SmartHome.Migrations
                         {
                             Id = 2,
                             ClassNodeId = 8,
+                            IsDraft = true,
                             Name = "Philips Hue White and Color",
                             ShortName = "philips-hue-color"
                         },
@@ -996,6 +1003,7 @@ namespace SmartHome.Migrations
                         {
                             Id = 3,
                             ClassNodeId = 10,
+                            IsDraft = true,
                             Name = "Aqara Wall Switch H1",
                             ShortName = "aqara-switch-h1"
                         },
@@ -1003,6 +1011,7 @@ namespace SmartHome.Migrations
                         {
                             Id = 4,
                             ClassNodeId = 16,
+                            IsDraft = true,
                             Name = "Google Nest Thermostat",
                             ShortName = "nest-thermostat"
                         },
@@ -1010,6 +1019,7 @@ namespace SmartHome.Migrations
                         {
                             Id = 5,
                             ClassNodeId = 23,
+                            IsDraft = true,
                             Name = "Xiaomi Temperature and Humidity Sensor",
                             ShortName = "xiaomi-temp-humidity"
                         });

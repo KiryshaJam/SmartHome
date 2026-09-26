@@ -9,6 +9,8 @@ builder.Services.AddCors(options =>
     {
         policy
             .WithOrigins(
+                "http://localhost:4173",
+                "http://127.0.0.1:4173",
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
                 "http://localhost:3000",
@@ -18,7 +20,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+    options.JsonSerializerOptions.Converters.Add(new SmartHome.Infrastructure.UtcDateTimeConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -32,6 +35,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.Use(SmartHome.Infrastructure.DatabaseErrors.Handle);
 
 app.UseHttpsRedirection();
 

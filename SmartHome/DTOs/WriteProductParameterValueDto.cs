@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace SmartHome.DTOs;
 
 public class WriteProductParameterValueDto
@@ -6,6 +8,7 @@ public class WriteProductParameterValueDto
 
     public decimal? NumberValue { get; set; }
 
+    [MaxLength(1024)]
     public string? StringValue { get; set; }
 
     public DateTime? DateTimeValue { get; set; }

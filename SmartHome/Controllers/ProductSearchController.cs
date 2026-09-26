@@ -40,6 +40,7 @@ public class ProductSearchController : ControllerBase
             result.Add(new ProductWithParametersDto
             {
                 Id = product.Id,
+                IsDraft = product.IsDraft,
                 Name = product.Name,
                 ShortName = product.ShortName,
                 ClassNodeId = product.ClassNodeId,
@@ -78,6 +79,7 @@ public class ProductSearchController : ControllerBase
             result.Add(new ProductWithParametersDto
             {
                 Id = product.Id,
+                IsDraft = product.IsDraft,
                 Name = product.Name,
                 ShortName = product.ShortName,
                 ClassNodeId = product.ClassNodeId,
@@ -132,6 +134,7 @@ public class ProductSearchController : ControllerBase
             result.Add(new ProductWithParametersDto
             {
                 Id = product.Id,
+                IsDraft = product.IsDraft,
                 Name = product.Name,
                 ShortName = product.ShortName,
                 ClassNodeId = product.ClassNodeId,
@@ -188,6 +191,7 @@ public class ProductSearchController : ControllerBase
             result.Add(new ProductWithParametersDto
             {
                 Id = product.Id,
+                IsDraft = product.IsDraft,
                 Name = product.Name,
                 ShortName = product.ShortName,
                 ClassNodeId = product.ClassNodeId,

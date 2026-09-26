@@ -17,3 +17,5 @@ TestResults/
 .env.*
 !.env.example
 *.log
+__pycache__/
+*.pyc

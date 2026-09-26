@@ -65,6 +65,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Product>(entity =>
         {
             entity.ToTable("product");
+            entity.Property(x => x.IsDraft).HasDefaultValue(true);
 
             entity.HasKey(x => x.Id);
 

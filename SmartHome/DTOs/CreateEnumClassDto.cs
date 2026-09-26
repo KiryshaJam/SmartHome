@@ -14,6 +14,7 @@ public class CreateEnumClassDto
     public string ShortName { get; set; } = null!;
 
     [Required]
+    [EnumDataType(typeof(EnumValueType))]
     public EnumValueType ValueType { get; set; }
 
     public int SortOrder { get; set; }
