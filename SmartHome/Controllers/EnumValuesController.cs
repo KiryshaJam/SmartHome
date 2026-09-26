@@ -126,17 +126,9 @@ public class EnumValuesController : ControllerBase
         if (value == null)
             return NotFound($"Значение с id={valueId} не найдено.");
 
-        var sortOrderExists = await _context.EnumValues
-            .AnyAsync(x =>
-                x.EnumClassId == enumClassId &&
-                x.SortOrder == dto.SortOrder &&
-                x.Id != valueId);
-
-        if (sortOrderExists)
-            return BadRequest($"Позиция с SortOrder={dto.SortOrder} уже существует в этом перечислении.");
-
-        value.SortOrder = dto.SortOrder;
-        await _context.SaveChangesAsync();
+        await _context.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT update_enum_value_sort_order({valueId}, {dto.SortOrder})");
+        await _context.Entry(value).ReloadAsync();
 
         var result = new EnumValueDto
         {
