@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { EnumValuesManager } from "../components/EnumValuesManager";
+import { ClassParameterEditor } from "../components/ClassParameterEditor";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { apiDelete, apiGet, apiPost } from "../api/client";
 import type {
   ClassNodeDto,
@@ -34,6 +36,7 @@ function sectionTitle(text: string) {
 }
 
 export function SchemaPage() {
+  const [selectedEnum, setSelectedEnum] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -45,6 +48,9 @@ export function SchemaPage() {
   const [classParams, setClassParams] = useState<ClassParameterDto[] | null>(null);
 
   const [classNodeId, setClassNodeId] = useState<number | "">("");
+
+  const classRef = useRef(classNodeId);
+  classRef.current = classNodeId;
 
   const refreshAll = useCallback(async () => {
     const [g, d, m, e, c] = await Promise.all([
@@ -81,6 +87,7 @@ export function SchemaPage() {
       return;
     }
     let cancelled = false;
+    setClassParams(null);
     (async () => {
       try {
         const p = await apiGet<ClassParameterDto[]>(`/api/classnodes/${classNodeId}/parameters`);
@@ -277,6 +284,7 @@ export function SchemaPage() {
         </p>
       </header>
       {err && <div className="error-banner">{err}</div>}
+      {selectedEnum != null && enumClasses?.find(e => e.id === selectedEnum) && <EnumValuesManager key={selectedEnum} enumClass={enumClasses.find(e => e.id === selectedEnum)!} />}
 
       <div className="card">
         {sectionTitle("Единицы измерения")}
@@ -388,7 +396,7 @@ export function SchemaPage() {
             <tbody>
               {enumClasses?.map((x) => (
                 <tr key={x.id}>
-                  <td>{x.name}</td>
+                  <td><button type="button" onClick={() => setSelectedEnum(x.id)}>{x.name}</button></td>
                   <td>{enumClassValueLabels.find((t) => t.v === x.valueType)?.label ?? x.valueType}</td>
                 </tr>
               ))}
@@ -553,6 +561,7 @@ export function SchemaPage() {
           <select
             className="input"
             style={{ maxWidth: "100%" }}
+            disabled={busy}
             value={classNodeId === "" ? "" : String(classNodeId)}
             onChange={(e) => setClassNodeId(e.target.value ? Number.parseInt(e.target.value, 10) : "")}
           >
@@ -590,6 +599,7 @@ export function SchemaPage() {
                       </td>
                       <td>{row.parameterGroupName ?? "—"}</td>
                       <td>
+                        <ClassParameterEditor key={row.id} parameter={row} groups={groups ?? []} onSaved={async () => { const updated = await apiGet<ClassParameterDto[]>(`/api/classnodes/${row.classNodeId}/parameters`); if (classRef.current === row.classNodeId) setClassParams(updated); }} />
                         {!row.isInherited && (
                           <button
                             type="button"

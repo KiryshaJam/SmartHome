@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { apiGet, apiPost } from "../api/client";
 import type {
   ClassNodeDto,
@@ -10,7 +10,8 @@ import type {
 import { ParameterValueTypes } from "../types/api";
 import { formatDateTimeLocal } from "../utils/datetime";
 
-export function SearchPage() {
+export function SearchPage({ onOpenProduct }: { onOpenProduct: (id: number) => void }) {
+  const searchVersion = useRef(0);
   const [leaves, setLeaves] = useState<ClassNodeDto[] | null>(null);
   const [classId, setClassId] = useState<number | "">("");
   const [withDesc, setWithDesc] = useState(true);
@@ -33,7 +34,7 @@ export function SearchPage() {
     let cancelled = false;
     (async () => {
       try {
-        const l = await apiGet<ClassNodeDto[]>("/api/classnodes/leaves");
+        const l = await apiGet<ClassNodeDto[]>("/api/classnodes");
         if (!cancelled) {
           setLeaves(l);
           if (l.length && classId === "") setClassId(l[0]!.id);
@@ -55,6 +56,7 @@ export function SearchPage() {
       return;
     }
     let cancelled = false;
+    setParams(null); setParamId(""); setResults(null);
     (async () => {
       try {
         const p = await apiGet<ClassParameterDto[]>(`/api/classnodes/${classIdNum}/parameters`);
@@ -95,9 +97,16 @@ export function SearchPage() {
     };
   }, [selectedParam?.enumClassId]);
 
+  useEffect(() => {
+    searchVersion.current += 1;
+    setResults(null);
+    setLoading(false);
+  }, [classId, paramId, withDesc, intV, numFrom, numTo, strContains, dateFrom, dateTo, enumId]);
+
   async function runSearch(e: FormEvent) {
     e.preventDefault();
     if (classIdNum == null) return;
+    const version = ++searchVersion.current;
     setLoading(true);
     setErr(null);
     const body: ProductFilterDto = { classNodeId: classIdNum };
@@ -129,12 +138,14 @@ export function SearchPage() {
     const path = withDesc ? "/api/product-search/filter-with-descendants" : "/api/product-search/filter";
     try {
       const data = await apiPost<ProductWithParametersDto[], ProductFilterDto>(path, body);
-      setResults(data);
+      if (version === searchVersion.current) setResults(data);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Ошибка поиска");
-      setResults(null);
+      if (version === searchVersion.current) {
+        setErr(e instanceof Error ? e.message : "Ошибка поиска");
+        setResults(null);
+      }
     } finally {
-      setLoading(false);
+      if (version === searchVersion.current) setLoading(false);
     }
   }
 
@@ -151,7 +162,7 @@ export function SearchPage() {
       <form className="card" style={{ display: "grid", gap: "0.85rem", maxWidth: "560px" }} onSubmit={(e) => void runSearch(e)}>
         <div>
           <label htmlFor="sc">Класс изделия</label>
-          <select
+          <select disabled={loading}
             id="sc"
             className="input"
             value={classId === "" ? "" : String(classId)}
@@ -284,7 +295,7 @@ export function SearchPage() {
           </div>
         )}
 
-        <button type="submit" className="btn-primary" disabled={loading || classIdNum == null}>
+        <button type="submit" className="btn-primary" disabled={loading || classIdNum == null || params === null}>
           {loading ? "Поиск…" : "Найти"}
         </button>
       </form>
@@ -292,6 +303,7 @@ export function SearchPage() {
       {results && (
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
           <div style={{ padding: "0.85rem 1rem", borderBottom: "1px solid var(--border)" }}>
+            {results.length === 0 && <p className="hint">По заданным условиям ничего не найдено.</p>}
             <span style={{ fontWeight: 600 }}>Результаты</span>
             <span className="hint" style={{ marginLeft: "0.5rem" }}>
               {results.length} шт.
@@ -309,7 +321,7 @@ export function SearchPage() {
               <tbody>
                 {results.map((r) => (
                   <tr key={r.id}>
-                    <td style={{ fontWeight: 600 }}>{r.name}</td>
+                    <td style={{ fontWeight: 600 }}><button type="button" onClick={() => onOpenProduct(r.id)}>{r.name}</button></td>
                     <td>{r.classNodeName}</td>
                     <td className="mono">{r.shortName}</td>
                   </tr>

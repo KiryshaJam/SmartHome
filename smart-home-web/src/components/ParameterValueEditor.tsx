@@ -33,7 +33,7 @@ export function ParameterValueEditor({
 }) {
   if (valueType === 1) {
     return (
-      <input
+      <input aria-label="Значение параметра"
         className="input mono"
         type="number"
         step={1}
@@ -49,7 +49,7 @@ export function ParameterValueEditor({
   }
   if (valueType === 2) {
     return (
-      <input
+      <input aria-label="Значение параметра"
         className="input mono"
         type="number"
         step="any"
@@ -65,9 +65,10 @@ export function ParameterValueEditor({
   }
   if (valueType === 3) {
     return (
-      <input
+      <input aria-label="Значение параметра"
         className="input"
         type="text"
+        maxLength={1024}
         value={stringValue ?? ""}
         onChange={(e) => onStrChange(e.target.value)}
       />
@@ -75,7 +76,7 @@ export function ParameterValueEditor({
   }
   if (valueType === 4) {
     return (
-      <input
+      <input aria-label="Значение параметра"
         className="input mono"
         type="datetime-local"
         value={isoToDateTimeLocal(dateTimeValue)}
@@ -85,7 +86,7 @@ export function ParameterValueEditor({
   }
   if (valueType === 5) {
     return (
-      <select
+      <select aria-label="Значение параметра"
         className="input"
         value={enumValueId ?? ""}
         onChange={(e) => {

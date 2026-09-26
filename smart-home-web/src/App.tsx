@@ -7,6 +7,7 @@ import { SchemaPage } from "./pages/SchemaPage";
 import { SearchPage } from "./pages/SearchPage";
 
 export default function App() {
+  const [productId, setProductId] = useState<number | null>(null);
   const [view, setView] = useState<AppView>("dashboard");
 
   return (
@@ -14,8 +15,8 @@ export default function App() {
       {view === "dashboard" && <Dashboard onNavigate={setView} />}
       {view === "classifier" && <ClassifierPage />}
       {view === "schema" && <SchemaPage />}
-      {view === "devices" && <DevicesPage />}
-      {view === "search" && <SearchPage />}
+      {view === "devices" && <DevicesPage initialId={productId} />}
+      {view === "search" && <SearchPage onOpenProduct={id => { setProductId(id); setView("devices"); }} />}
     </AppShell>
   );
 }
