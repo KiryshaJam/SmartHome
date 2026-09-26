@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { ProductActions } from "../components/ProductActions";
+import { IconValue } from "../components/EnumValuesManager";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { apiDelete, apiGet, apiPost, apiPut } from "../api/client";
 import { ParameterValueEditor } from "../components/ParameterValueEditor";
 import type {
@@ -34,11 +36,13 @@ function displayParamValue(p: ProductParameterValueDto): string {
   }
 }
 
-export function DevicesPage() {
+export function DevicesPage({ initialId = null }: { initialId?: number | null }) {
   const [products, setProducts] = useState<ProductDto[] | null>(null);
   const [leaves, setLeaves] = useState<ClassNodeDto[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(initialId);
+  const selectedRef = useRef(selectedId);
+  selectedRef.current = selectedId;
   const [card, setCard] = useState<ProductWithParametersDto | null>(null);
   const [loadingCard, setLoadingCard] = useState(false);
   const [enumCache, setEnumCache] = useState<Record<number, EnumValueDto[]>>({});
@@ -79,6 +83,7 @@ export function DevicesPage() {
     }
     let cancelled = false;
     (async () => {
+      setCard(null);
       setLoadingCard(true);
       setErr(null);
       try {
@@ -98,8 +103,12 @@ export function DevicesPage() {
   const ensureEnum = useCallback(
     async (enumClassId: number) => {
       if (enumCache[enumClassId]) return;
-      const values = await apiGet<EnumValueDto[]>(`/api/enum-classes/${enumClassId}/values`);
-      setEnumCache((m) => ({ ...m, [enumClassId]: values }));
+      try {
+        const values = await apiGet<EnumValueDto[]>(`/api/enum-classes/${enumClassId}/values`);
+        setEnumCache((m) => ({ ...m, [enumClassId]: values }));
+      } catch (error) {
+        setErr(error instanceof Error ? error.message : "Ошибка загрузки значений перечисления");
+      }
     },
     [enumCache],
   );
@@ -194,14 +203,7 @@ export function DevicesPage() {
         </form>
       )}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 1.4fr)",
-          gap: "1rem",
-          alignItems: "start",
-        }}
-      >
+      <div className="devices-layout">
         <div className="card card--flush">
           <div className="card-header">
             <span>Каталог</span>
@@ -227,7 +229,7 @@ export function DevicesPage() {
                     onClick={() => setSelectedId(p.id)}
                   >
                     <td>
-                      <div style={{ fontWeight: 600 }}>{p.name}</div>
+                      <button type="button" className="btn-ghost" onClick={() => setSelectedId(p.id)}>{p.name}</button>
                       <div className="hint mono" style={{ fontSize: "0.82rem" }}>
                         {p.shortName}
                       </div>
@@ -255,15 +257,15 @@ export function DevicesPage() {
         <div className="card" style={{ minHeight: "280px" }}>
           {!selectedId && <div className="hint">Выберите устройство слева.</div>}
           {selectedId && loadingCard && <div className="hint">Загрузка карточки…</div>}
-          {selectedId && !loadingCard && card && selectedProduct && (
-            <ProductCardView
+          {selectedId && !loadingCard && card && card.id === selectedId && selectedProduct && (
+            <ProductCardView key={card.id}
               product={selectedProduct}
               card={card}
               enumCache={enumCache}
               onEnsureEnum={(id) => void ensureEnum(id)}
               onSaved={async () => {
                 const c = await apiGet<ProductWithParametersDto>(`/api/products/${selectedId}/parameters/card`);
-                setCard(c);
+                if (selectedRef.current === c.id) setCard(c);
                 await loadProducts();
               }}
             />
@@ -526,6 +528,7 @@ function ProductCardView({
           {product.classNodeName}
         </div>
       </div>
+      <ProductActions key={card.id} card={card} onSaved={onSaved} />
       <AddParameterToClassSection product={product} card={card} onAdded={onSaved} />
       {grouped.map(([groupName, params]) => (
         <div key={groupName}>
@@ -640,12 +643,13 @@ function ParameterRow({
             {param.parameterShortName}
             {param.measureUnitShortName ? ` · ${param.measureUnitShortName}` : ""}
             {param.isInherited && " · унаследован"}
+            {param.isRequired && " · обязательный"}
           </div>
         </div>
         {!edit && (
           <div style={{ textAlign: "right" }}>
             <div className="mono" style={{ fontSize: "0.95rem" }}>
-              {displayParamValue(param)}
+              <IconValue name={param.enumIconValue} />{displayParamValue(param)}
             </div>
             <button type="button" className="btn-ghost" style={{ marginTop: "0.35rem" }} onClick={() => setEdit(true)}>
               Изменить
