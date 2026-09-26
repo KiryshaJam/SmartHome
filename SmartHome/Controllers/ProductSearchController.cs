@@ -286,6 +286,7 @@ public class ProductSearchController : ControllerBase
                 ParameterGroupName = x.ClassParameter.ParameterGroup != null ? x.ClassParameter.ParameterGroup.Name : null,
                 SortOrder = x.ClassParameter.SortOrder,
                 IsRequired = x.ClassParameter.IsRequired,
+                IsInherited = x.ClassParameter.IsInherited,
                 MinNumberValue = x.ClassParameter.MinNumberValue,
                 MaxNumberValue = x.ClassParameter.MaxNumberValue,
                 MeasureUnitId = x.ClassParameter.ParameterDefinition.MeasureUnitId,

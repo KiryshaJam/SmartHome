@@ -1,0 +1,18 @@
+# SmartHome
+
+Справочник систем умного дома: классификатор, перечисления, параметры и карточки изделий.
+
+## Запуск
+
+Требуются .NET SDK 10, Node.js/npm, PostgreSQL 17 (или Docker Desktop), `dotnet ef`.
+
+1. Запустите PostgreSQL: `docker compose -f SmartHome/docker-compose.yml up -d`.
+2. Задайте подключение через `ConnectionStrings__DefaultConnection` или локальную конфигурацию ASP.NET. Перед обновлением существующей базы сохраните `pg_dump` вне репозитория. Для восстановления используйте `pg_restore` в отдельную базу и переключите подключение после проверки.
+3. Выполните `dotnet ef database update --project SmartHome`. Миграции устанавливают схему, начальные данные и SQL-функции; отдельно запускать SQL-файлы не нужно.
+4. Запустите API: `dotnet run --project SmartHome --launch-profile http` (порт 5156, Swagger: `/swagger`).
+5. Выполните `npm --prefix smart-home-web ci`, затем `npm --prefix smart-home-web run dev -- --host 127.0.0.1 --port 5173 --strictPort`.
+6. Откройте http://127.0.0.1:5173. Запросы `/api` передаются через Vite на API.
+
+Для собранного интерфейса: `npm --prefix smart-home-web run build`, затем `npm --prefix smart-home-web run preview -- --host 127.0.0.1 --port 4173 --strictPort`. API по умолчанию находится на http://localhost:5156; другой адрес задаётся переменной `VITE_API_URL` **при сборке**. CORS разрешает только указанные локальные адреса на портах 3000, 4173, 5173. При размещении на сервере настройте точный origin и HTTPS.
+
+Не запускайте изменяющие данные тесты на рабочей базе. Используйте отдельную PostgreSQL и явно задавайте тестовое подключение.
