@@ -1,0 +1,19 @@
+# Build output and dependencies
+**/bin/
+**/obj/
+node_modules/
+dist/
+coverage/
+TestResults/
+# Local editor settings
+.idea/
+.vs/
+.vscode/
+*.user
+*.suo
+# Local environment and operating system files
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
