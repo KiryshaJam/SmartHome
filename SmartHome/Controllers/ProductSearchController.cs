@@ -163,8 +163,8 @@ public class ProductSearchController : ControllerBase
                 .Include(x => x.ParameterDefinition)
                 .FirstOrDefaultAsync(x => x.Id == dto.ClassParameterId.Value);
 
-            if (classParameter == null)
-                return BadRequest($"Параметр класса с id={dto.ClassParameterId.Value} не найден.");
+            if (classParameter == null || !classIds.Contains(classParameter.ClassNodeId))
+                return BadRequest("Параметр не принадлежит выбранной ветви классификатора.");
 
             var validationError = ValidateFilterForParameter(classParameter.ParameterDefinition.ValueType, dto);
             if (validationError != null)
@@ -205,27 +205,30 @@ public class ProductSearchController : ControllerBase
         ProductFilterDto dto)
     {
         var parameterType = classParameter.ParameterDefinition.ValueType;
-        var classParameterId = classParameter.Id;
+        var definitionId = classParameter.ParameterDefinitionId;
 
         return parameterType switch
         {
             ParameterValueType.Integer => query.Where(product =>
                 _context.ProductParameterValues.Any(value =>
                     value.ProductId == product.Id &&
-                    value.ClassParameterId == classParameterId &&
+                    value.ClassParameter.ParameterDefinitionId == definitionId &&
+                    value.ClassParameter.ClassNodeId == product.ClassNodeId &&
                     (!dto.IntegerValue.HasValue || value.IntegerValue == dto.IntegerValue.Value))),
 
             ParameterValueType.Number => query.Where(product =>
                 _context.ProductParameterValues.Any(value =>
                     value.ProductId == product.Id &&
-                    value.ClassParameterId == classParameterId &&
+                    value.ClassParameter.ParameterDefinitionId == definitionId &&
+                    value.ClassParameter.ClassNodeId == product.ClassNodeId &&
                     (!dto.NumberFrom.HasValue || value.NumberValue >= dto.NumberFrom.Value) &&
                     (!dto.NumberTo.HasValue || value.NumberValue <= dto.NumberTo.Value))),
 
             ParameterValueType.String => query.Where(product =>
                 _context.ProductParameterValues.Any(value =>
                     value.ProductId == product.Id &&
-                    value.ClassParameterId == classParameterId &&
+                    value.ClassParameter.ParameterDefinitionId == definitionId &&
+                    value.ClassParameter.ClassNodeId == product.ClassNodeId &&
                     value.StringValue != null &&
                     dto.StringContains != null &&
                     value.StringValue.ToLower().Contains(dto.StringContains.ToLower()))),
@@ -233,14 +236,16 @@ public class ProductSearchController : ControllerBase
             ParameterValueType.DateTime => query.Where(product =>
                 _context.ProductParameterValues.Any(value =>
                     value.ProductId == product.Id &&
-                    value.ClassParameterId == classParameterId &&
+                    value.ClassParameter.ParameterDefinitionId == definitionId &&
+                    value.ClassParameter.ClassNodeId == product.ClassNodeId &&
                     (!dto.DateFrom.HasValue || value.DateTimeValue >= dto.DateFrom.Value) &&
                     (!dto.DateTo.HasValue || value.DateTimeValue <= dto.DateTo.Value))),
 
             ParameterValueType.Enum => query.Where(product =>
                 _context.ProductParameterValues.Any(value =>
                     value.ProductId == product.Id &&
-                    value.ClassParameterId == classParameterId &&
+                    value.ClassParameter.ParameterDefinitionId == definitionId &&
+                    value.ClassParameter.ClassNodeId == product.ClassNodeId &&
                     value.EnumValueId == dto.EnumValueId)),
 
             _ => query
