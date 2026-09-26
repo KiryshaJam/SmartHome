@@ -4,6 +4,8 @@ public class ProductWithParametersDto
 {
     public int Id { get; set; }
 
+    public bool IsDraft { get; set; }
+
     public string Name { get; set; } = null!;
 
     public string ShortName { get; set; } = null!;

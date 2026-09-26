@@ -6,6 +6,8 @@ public class Product
 {
     public int Id { get; set; }
 
+    public bool IsDraft { get; set; } = true;
+
     [Required]
     [MaxLength(256)]
     public string Name { get; set; } = null!;

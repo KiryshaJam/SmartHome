@@ -159,6 +159,9 @@ public class EnumValuesController : ControllerBase
         if (enumClass == null)
             return NotFound($"Перечисление с id={enumClassId} не найдено.");
 
+        if (new object?[] { dto.StringValue, dto.NumberValue, dto.IconValue }.Count(x => x != null) != 1)
+            return Ok(false);
+
         var exists = enumClass.ValueType switch
         {
             EnumValueType.String => await _context.EnumValues.AnyAsync(x =>
@@ -187,6 +190,9 @@ public class EnumValuesController : ControllerBase
 
         if (value == null)
             return NotFound($"Значение с id={valueId} не найдено.");
+
+        if (await _context.ProductParameterValues.AnyAsync(x => x.EnumValueId == valueId))
+            return Conflict("Значение используется в карточках изделий.");
 
         _context.EnumValues.Remove(value);
         await _context.SaveChangesAsync();

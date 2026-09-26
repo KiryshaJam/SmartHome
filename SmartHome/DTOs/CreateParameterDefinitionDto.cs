@@ -14,6 +14,7 @@ public class CreateParameterDefinitionDto
     public string ShortName { get; set; } = null!;
 
     [Required]
+    [EnumDataType(typeof(ParameterValueType))]
     public ParameterValueType ValueType { get; set; }
 
     public int? MeasureUnitId { get; set; }

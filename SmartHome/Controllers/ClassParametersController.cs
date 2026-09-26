@@ -150,8 +150,6 @@ public class ClassParametersController : ControllerBase
         _context.ClassParameters.Add(classParameter);
         await _context.SaveChangesAsync();
 
-        await CopyParameterToDescendantsInternal(classNodeId, classParameter.Id);
-
         var result = await BuildClassParameterDtoQuery()
             .FirstAsync(x => x.Id == classParameter.Id);
 
@@ -430,41 +428,4 @@ public class ClassParametersController : ControllerBase
         return result;
     }
 
-    private async Task CopyParameterToDescendantsInternal(int classNodeId, int parameterId)
-    {
-        var sourceParameter = await _context.ClassParameters
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.ClassNodeId == classNodeId && x.Id == parameterId);
-
-        if (sourceParameter == null)
-            return;
-
-        var descendantIds = await GetDescendantClassIds(classNodeId);
-
-        foreach (var descendantId in descendantIds)
-        {
-            var alreadyExists = await _context.ClassParameters.AnyAsync(x =>
-                x.ClassNodeId == descendantId &&
-                x.ParameterDefinitionId == sourceParameter.ParameterDefinitionId);
-
-            if (alreadyExists)
-                continue;
-
-            var inheritedParameter = new ClassParameter
-            {
-                ClassNodeId = descendantId,
-                ParameterDefinitionId = sourceParameter.ParameterDefinitionId,
-                ParameterGroupId = sourceParameter.ParameterGroupId,
-                SortOrder = sourceParameter.SortOrder,
-                IsRequired = sourceParameter.IsRequired,
-                IsInherited = true,
-                MinNumberValue = sourceParameter.MinNumberValue,
-                MaxNumberValue = sourceParameter.MaxNumberValue
-            };
-
-            _context.ClassParameters.Add(inheritedParameter);
-        }
-
-        await _context.SaveChangesAsync();
-    }
 }
