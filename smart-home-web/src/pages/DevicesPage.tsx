@@ -1,3 +1,4 @@
+import { BomPanel } from "../components/BomPanel";
 import { ProductActions } from "../components/ProductActions";
 import { IconValue } from "../components/EnumValuesManager";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -529,6 +530,7 @@ function ProductCardView({
         </div>
       </div>
       <ProductActions key={card.id} card={card} onSaved={onSaved} />
+      <BomPanel productId={product.id} onCreated={onSaved} />
       <AddParameterToClassSection product={product} card={card} onAdded={onSaved} />
       {grouped.map(([groupName, params]) => (
         <div key={groupName}>
