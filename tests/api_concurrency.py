@@ -20,10 +20,9 @@ assert next(p for p in card['parameters'] if p['classParameterId']==cp)['numberV
 a,b=node('-race-a'),node('-race-b')
 race([lambda: request('PUT',f'/classnodes/{a}/move',{'newParentId':b},expected=(200,400,409)),lambda: request('PUT',f'/classnodes/{b}/move',{'newParentId':a},expected=(200,400,409))])
 assert not(request('GET',f'/classnodes/{a}')['parentId']==b and request('GET',f'/classnodes/{b}')['parentId']==a)
-# A late required binding must roll back parent and descendant inserts atomically.
-request('PUT',f'/products/{product}/status',{'isDraft':False})
-d = definition('-atomic',3)
-request('POST',f'/classnodes/{root}/parameters',dict(parameterDefinitionId=d,sortOrder=30,isRequired=True),expected=(400,))
+# A late required binding is inherited even by classes with existing products.
+d = definition('-late-required',3)
+request('POST',f'/classnodes/{root}/parameters',dict(parameterDefinitionId=d,sortOrder=30,isRequired=True))
 for c in (root,child,leaf):
-    assert all(p['parameterDefinitionId'] != d for p in request('GET',f'/classnodes/{c}/parameters'))
-print('Concurrent writes, opposite tree moves and atomic inheritance passed.')
+    assert any(p['parameterDefinitionId'] == d and p['isRequired'] for p in request('GET',f'/classnodes/{c}/parameters'))
+print('Concurrent writes, opposite tree moves and late required parameters passed.')

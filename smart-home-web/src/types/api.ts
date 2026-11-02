@@ -32,7 +32,6 @@ export interface TreeNodeDto {
 }
 
 export interface ProductDto {
-  isDraft: boolean;
   id: number;
   name: string;
   shortName: string;
@@ -73,7 +72,6 @@ export interface ProductParameterValueDto {
 }
 
 export interface ProductWithParametersDto {
-  isDraft: boolean;
   id: number;
   name: string;
   shortName: string;

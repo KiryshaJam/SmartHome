@@ -49,7 +49,6 @@ public class ProductParameterValuesController : ControllerBase
         var result = new ProductWithParametersDto
         {
             Id = product.Id,
-            IsDraft = product.IsDraft,
             Name = product.Name,
             ShortName = product.ShortName,
             ClassNodeId = product.ClassNodeId,

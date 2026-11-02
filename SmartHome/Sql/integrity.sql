@@ -21,14 +21,14 @@ END $$;
 CREATE OR REPLACE FUNCTION guard_product_value() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
  IF TG_OP='DELETE' THEN
-   IF EXISTS(SELECT 1 FROM product p JOIN class_parameter cp ON cp."Id"=OLD."ClassParameterId" WHERE p."Id"=OLD."ProductId" AND NOT p."IsDraft" AND cp."IsRequired") THEN
-     RAISE EXCEPTION 'Нельзя очистить обязательное значение завершённой карточки.';
+   IF EXISTS(SELECT 1 FROM product p JOIN class_parameter cp ON cp."Id"=OLD."ClassParameterId" WHERE p."Id"=OLD."ProductId" AND cp."IsRequired") THEN
+     RAISE EXCEPTION 'Нельзя очистить обязательное значение параметра.';
    END IF;
    RETURN OLD;
  END IF;
  IF TG_OP='UPDATE' AND (NEW."ProductId",NEW."ClassParameterId") IS DISTINCT FROM (OLD."ProductId",OLD."ClassParameterId") AND EXISTS(
- SELECT 1 FROM product p JOIN class_parameter cp ON cp."Id"=OLD."ClassParameterId" WHERE p."Id"=OLD."ProductId" AND NOT p."IsDraft" AND cp."IsRequired" AND p."ClassNodeId"=cp."ClassNodeId") THEN
- RAISE EXCEPTION 'Нельзя перепривязать обязательное значение завершённой карточки.';
+ SELECT 1 FROM product p JOIN class_parameter cp ON cp."Id"=OLD."ClassParameterId" WHERE p."Id"=OLD."ProductId" AND cp."IsRequired" AND p."ClassNodeId"=cp."ClassNodeId") THEN
+ RAISE EXCEPTION 'Нельзя перепривязать обязательное значение параметра.';
  END IF;
  PERFORM validate_catalog_value(NEW);
  RETURN NEW;
@@ -56,10 +56,6 @@ BEGIN
      RAISE EXCEPTION 'Перенос отклонён: целевой класс не поддерживает сохранённые параметры или их значения.';
    END IF;
  END IF;
- IF NOT NEW."IsDraft" AND EXISTS(SELECT 1 FROM class_parameter dst WHERE dst."ClassNodeId"=NEW."ClassNodeId" AND dst."IsRequired" AND NOT EXISTS(
-   SELECT 1 FROM product_parameter_value v JOIN class_parameter src ON src."Id"=v."ClassParameterId" WHERE v."ProductId"=NEW."Id" AND src."ParameterDefinitionId"=dst."ParameterDefinitionId")) THEN
-   RAISE EXCEPTION 'Заполните все обязательные параметры перед завершением карточки.';
- END IF;
  RETURN NEW;
 END $$;
 DROP TRIGGER IF EXISTS guard_product ON product;
@@ -84,7 +80,6 @@ BEGIN
  IF NEW."MinNumberValue">NEW."MaxNumberValue" OR (kind NOT IN (1,2) AND num_nonnulls(NEW."MinNumberValue",NEW."MaxNumberValue")>0) THEN RAISE EXCEPTION 'Неверные ограничения параметра.'; END IF;
  IF TG_OP='UPDATE' AND (NEW."ClassNodeId",NEW."ParameterDefinitionId") IS DISTINCT FROM (OLD."ClassNodeId",OLD."ParameterDefinitionId") THEN RAISE EXCEPTION 'Нельзя менять класс или определение существующей привязки.'; END IF;
  IF EXISTS(SELECT 1 FROM product_parameter_value WHERE "ClassParameterId"=NEW."Id" AND (coalesce("IntegerValue"::numeric,"NumberValue")<NEW."MinNumberValue" OR coalesce("IntegerValue"::numeric,"NumberValue")>NEW."MaxNumberValue")) THEN RAISE EXCEPTION 'Новые ограничения нарушают сохранённые значения.'; END IF;
- IF NEW."IsRequired" AND EXISTS(SELECT 1 FROM product p WHERE p."ClassNodeId"=NEW."ClassNodeId" AND NOT p."IsDraft" AND NOT EXISTS(SELECT 1 FROM product_parameter_value v WHERE v."ProductId"=p."Id" AND v."ClassParameterId"=NEW."Id")) THEN RAISE EXCEPTION 'Обязательный параметр не заполнен в завершённых карточках. Сначала переведите их в черновики.'; END IF;
  RETURN NEW;
 END $$;
 DROP TRIGGER IF EXISTS guard_class_parameter ON class_parameter;

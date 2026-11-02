@@ -26,7 +26,6 @@ public class ProductsController : ControllerBase
             .Select(x => new ProductDto
             {
                 Id = x.Id,
-                IsDraft = x.IsDraft,
                 Name = x.Name,
                 ShortName = x.ShortName,
                 ClassNodeId = x.ClassNodeId,
@@ -46,7 +45,6 @@ public class ProductsController : ControllerBase
             .Select(x => new ProductDto
             {
                 Id = x.Id,
-                IsDraft = x.IsDraft,
                 Name = x.Name,
                 ShortName = x.ShortName,
                 ClassNodeId = x.ClassNodeId,
@@ -91,7 +89,6 @@ public class ProductsController : ControllerBase
             .Select(x => new ProductDto
             {
                 Id = x.Id,
-                IsDraft = x.IsDraft,
                 Name = x.Name,
                 ShortName = x.ShortName,
                 ClassNodeId = x.ClassNodeId,
@@ -102,16 +99,6 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
     
-    [HttpPut("{id:int}/status")]
-    public async Task<ActionResult<ProductDto>> SetStatus(int id, ProductStatusDto dto)
-    {
-        var product = await _context.Products.FindAsync(id);
-        if (product == null) return NotFound("Изделие не найдено.");
-        product.IsDraft = dto.IsDraft;
-        await _context.SaveChangesAsync();
-        return await GetById(id);
-    }
-
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -148,7 +135,6 @@ public class ProductsController : ControllerBase
             .Select(x => new ProductDto
             {
                 Id = x.Id,
-                IsDraft = x.IsDraft,
                 Name = x.Name,
                 ShortName = x.ShortName,
                 ClassNodeId = x.ClassNodeId,

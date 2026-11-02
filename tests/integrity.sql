@@ -10,6 +10,9 @@ END $$;
 DO $$
 DECLARE root integer; leaf integer; sibling integer; other integer; def integer; cp integer; target integer; item integer; enumid integer; ev integer; second integer; v integer; k integer; d integer; binding integer;
 BEGIN
+ IF EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='product' AND column_name='IsDraft') OR to_regprocedure('complete_product(integer)') IS NOT NULL THEN
+   RAISE EXCEPTION 'Obsolete product lifecycle still exists';
+ END IF;
  root:=add_class_node('SQL root','sql-root');
  leaf:=add_class_node('SQL leaf','sql-leaf',root,true);
  sibling:=add_class_node('SQL sibling','sql-sibling',root,true);
@@ -18,9 +21,8 @@ BEGIN
  cp:=bind_class_parameter(root,def,NULL,1,true,1,10);
  SELECT "Id" INTO target FROM class_parameter WHERE "ClassNodeId"=leaf AND "ParameterDefinitionId"=def;
  item:=add_product('SQL item','sql-item',leaf);
- PERFORM pg_temp.reject(format('SELECT complete_product(%s)',item));
+ PERFORM write_product_parameter(item,target,NULL,8);
  PERFORM write_product_parameter(item,target,NULL,9);
- PERFORM complete_product(item);
  PERFORM pg_temp.reject(format('DELETE FROM product_parameter_value WHERE "ProductId"=%s',item));
  PERFORM pg_temp.reject(format('SELECT write_product_parameter(%s,%s,NULL,999)',item,target));
  PERFORM pg_temp.reject(format('SELECT write_product_parameter(%s,%s,NULL,9,''mixed'')',item,target));
@@ -46,7 +48,6 @@ BEGIN
  PERFORM pg_temp.reject(format('SELECT add_enum_value(%s,''Alpha'',NULL,NULL,NULL,3)',enumid));
  IF is_enum_value_allowed(enumid,'Alpha',9,NULL) THEN RAISE EXCEPTION 'Mixed enum check accepted'; END IF;
  IF NOT is_enum_value_allowed(enumid,'Alpha',NULL,NULL) THEN RAISE EXCEPTION 'Valid enum check failed'; END IF;
- UPDATE product SET "IsDraft"=true WHERE "Id"=item;
  FOR k IN 1..5 LOOP
    d:=describe_parameter('SQL type '||k,'sql-type-'||k,k,NULL,CASE WHEN k=5 THEN enumid END);
    binding:=bind_class_parameter(root,d,NULL,k+1,false);
@@ -58,7 +59,6 @@ BEGIN
  PERFORM pg_temp.reject(format('SELECT delete_enum_class(%s)',enumid));
  IF jsonb_array_length(get_product_parameters(item))<>6 THEN RAISE EXCEPTION 'Card missing parameters'; END IF;
  IF NOT group_product_parameters(item) ? 'Общие' THEN RAISE EXCEPTION 'Grouping failed'; END IF;
- PERFORM complete_product(item);
  PERFORM delete_product(item);
 END $$;
 ROLLBACK;
