@@ -24,6 +24,11 @@ public static class DatabaseErrors
             };
             await context.Response.WriteAsJsonAsync(new { message });
         }
+        catch (ArgumentException error)
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsJsonAsync(new { message = error.Message });
+        }
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested) { }
         catch (Exception exception)
         {
@@ -39,6 +44,7 @@ public static class DatabaseErrors
 
     private static bool IsConnectionFailure(Exception? error) =>
         error is NpgsqlException and not PostgresException ||
+        error is PostgresException pg && (pg.SqlState is "3D000" or "57P03" or "53300" || pg.SqlState.StartsWith("08", StringComparison.Ordinal)) ||
         (error?.InnerException is { } inner && IsConnectionFailure(inner));
 
     private static PostgresException? FindPostgres(Exception? error) =>

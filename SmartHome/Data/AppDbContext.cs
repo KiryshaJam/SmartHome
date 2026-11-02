@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SmartHome.Models;
+using SmartHome.Bom;
 
 namespace SmartHome.Data;
 
@@ -22,6 +23,30 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<BomRevision>(e =>
+        {
+            e.ToTable("bom_revision"); e.HasKey(x => x.Id);
+            e.HasOne<Product>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<MeasureUnit>().WithMany().HasForeignKey(x => x.UnitId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<BomRevision>().WithMany().HasForeignKey(x => x.PreviousId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<BomRevision>().WithMany().HasForeignKey(x => x.BaseRevisionId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.ProductId, x.Id });
+        });
+        modelBuilder.Entity<BomVariant>(e =>
+        {
+            e.ToTable("bom_variant"); e.HasKey(x => x.Id);
+            e.HasOne<BomRevision>().WithMany().HasForeignKey(x => x.RevisionId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<BomOrder>(e =>
+        {
+            e.ToTable("bom_order"); e.HasKey(x => x.Id); e.HasIndex(x => x.Number).IsUnique();
+        });
+        modelBuilder.Entity<BomOrderRevision>(e =>
+        {
+            e.ToTable("bom_order_revision"); e.HasKey(x => x.Id);
+            e.HasOne<BomOrder>().WithMany().HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<BomOrderRevision>().WithMany().HasForeignKey(x => x.PreviousId).OnDelete(DeleteBehavior.Restrict);
+        });
 
         modelBuilder.Entity<MeasureUnit>(entity =>
         {
