@@ -46,7 +46,6 @@ CREATE OR REPLACE FUNCTION get_class_parameters(p_class integer) RETURNS SETOF c
 CREATE OR REPLACE FUNCTION write_product_parameter(p_product integer,p_parameter integer,p_integer integer DEFAULT NULL,p_number numeric DEFAULT NULL,p_string text DEFAULT NULL,p_date timestamptz DEFAULT NULL,p_enum integer DEFAULT NULL) RETURNS integer LANGUAGE sql AS $$
  INSERT INTO product_parameter_value("ProductId","ClassParameterId","IntegerValue","NumberValue","StringValue","DateTimeValue","EnumValueId") VALUES(p_product,p_parameter,p_integer,p_number,p_string,p_date,p_enum)
  ON CONFLICT("ProductId","ClassParameterId") DO UPDATE SET "IntegerValue"=EXCLUDED."IntegerValue","NumberValue"=EXCLUDED."NumberValue","StringValue"=EXCLUDED."StringValue","DateTimeValue"=EXCLUDED."DateTimeValue","EnumValueId"=EXCLUDED."EnumValueId" RETURNING "Id" $$;
-CREATE OR REPLACE FUNCTION complete_product(p_product integer) RETURNS boolean LANGUAGE plpgsql AS $$ BEGIN UPDATE product SET "IsDraft"=false WHERE "Id"=p_product; RETURN FOUND; END $$;
 CREATE OR REPLACE FUNCTION get_product_parameters(p_product integer) RETURNS jsonb LANGUAGE sql AS $$
  SELECT coalesce(jsonb_agg(jsonb_build_object('parameter',to_jsonb(cp),'definition',to_jsonb(pd),'value',to_jsonb(v),'group',g."Name") ORDER BY g."SortOrder",cp."SortOrder",cp."Id"),'[]'::jsonb)
  FROM product p JOIN class_parameter cp ON cp."ClassNodeId"=p."ClassNodeId" JOIN parameter_definition pd ON pd."Id"=cp."ParameterDefinitionId"

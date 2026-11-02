@@ -683,9 +683,11 @@ function ParameterRow({
             <button type="button" className="btn-ghost" disabled={busy} onClick={() => setEdit(false)}>
               Отмена
             </button>
-            <button type="button" className="btn-danger" disabled={busy} onClick={() => void clearValue()}>
-              Сбросить
-            </button>
+            {!param.isRequired && param.id !== 0 && (
+              <button type="button" className="btn-danger" disabled={busy} onClick={() => void clearValue()}>
+                Сбросить
+              </button>
+            )}
           </div>
         </div>
       )}
