@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 
-export type AppView = "dashboard" | "classifier" | "schema" | "devices" | "search";
+export type AppView = "dashboard" | "classifier" | "schema" | "devices" | "search" | "orders";
 
 const nav: { id: AppView; label: string; desc: string }[] = [
   { id: "dashboard", label: "Обзор", desc: "Сводка и быстрые действия" },
   { id: "classifier", label: "Классификатор", desc: "Иерархия классов и новые узлы" },
   { id: "schema", label: "Справочники", desc: "Группы, свойства и привязка к классам" },
-  { id: "devices", label: "Устройства", desc: "Каталог и параметры изделий" },
+  { id: "devices", label: "Изделия", desc: "Каталог и параметры изделий" },
+  { id: "orders", label: "Заказы", desc: "Варианты, состав и сводные нормы" },
   { id: "search", label: "Поиск", desc: "Фильтрация по классу и параметрам" },
 ];
 

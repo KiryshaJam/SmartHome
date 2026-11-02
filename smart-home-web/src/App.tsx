@@ -1,3 +1,4 @@
+import { OrdersPage } from "./pages/OrdersPage";
 import { useState } from "react";
 import { AppShell, type AppView } from "./components/AppShell";
 import { ClassifierPage } from "./pages/ClassifierPage";
@@ -14,6 +15,7 @@ export default function App() {
     <AppShell active={view} onNavigate={setView}>
       {view === "dashboard" && <Dashboard onNavigate={setView} />}
       {view === "classifier" && <ClassifierPage />}
+      {view === "orders" && <OrdersPage />}
       {view === "schema" && <SchemaPage />}
       {view === "devices" && <DevicesPage initialId={productId} />}
       {view === "search" && <SearchPage onOpenProduct={id => { setProductId(id); setView("devices"); }} />}
