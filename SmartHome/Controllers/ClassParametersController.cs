@@ -150,8 +150,6 @@ public class ClassParametersController : ControllerBase
         _context.ClassParameters.Add(classParameter);
         await _context.SaveChangesAsync();
 
-        await CopyParameterToDescendantsInternal(classNodeId, classParameter.Id);
-
         var result = await BuildClassParameterDtoQuery()
             .FirstAsync(x => x.Id == classParameter.Id);
 
@@ -215,38 +213,8 @@ public class ClassParametersController : ControllerBase
         if (classNode.ParentId == null)
             return BadRequest("У корневого класса нет родительского класса.");
 
-        var parentParameters = await _context.ClassParameters
-            .Where(x => x.ClassNodeId == classNode.ParentId.Value)
-            .ToListAsync();
-
-        if (!parentParameters.Any())
-            return BadRequest("У родительского класса нет параметров для наследования.");
-
-        foreach (var parentParameter in parentParameters)
-        {
-            var alreadyExists = await _context.ClassParameters.AnyAsync(x =>
-                x.ClassNodeId == classNodeId &&
-                x.ParameterDefinitionId == parentParameter.ParameterDefinitionId);
-
-            if (alreadyExists)
-                continue;
-
-            var inheritedParameter = new ClassParameter
-            {
-                ClassNodeId = classNodeId,
-                ParameterDefinitionId = parentParameter.ParameterDefinitionId,
-                ParameterGroupId = parentParameter.ParameterGroupId,
-                SortOrder = parentParameter.SortOrder,
-                IsRequired = parentParameter.IsRequired,
-                IsInherited = true,
-                MinNumberValue = parentParameter.MinNumberValue,
-                MaxNumberValue = parentParameter.MaxNumberValue
-            };
-
-            _context.ClassParameters.Add(inheritedParameter);
-        }
-
-        await _context.SaveChangesAsync();
+        await _context.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT inherit_class_parameters({classNodeId})");
 
         var result = await BuildClassParameterDtoQuery()
             .Where(x => x.ClassNodeId == classNodeId)
@@ -272,31 +240,8 @@ public class ClassParametersController : ControllerBase
         if (!descendantIds.Any())
             return BadRequest("У класса нет дочерних классов для наследования параметра.");
 
-        foreach (var descendantId in descendantIds)
-        {
-            var alreadyExists = await _context.ClassParameters.AnyAsync(x =>
-                x.ClassNodeId == descendantId &&
-                x.ParameterDefinitionId == sourceParameter.ParameterDefinitionId);
-
-            if (alreadyExists)
-                continue;
-
-            var inheritedParameter = new ClassParameter
-            {
-                ClassNodeId = descendantId,
-                ParameterDefinitionId = sourceParameter.ParameterDefinitionId,
-                ParameterGroupId = sourceParameter.ParameterGroupId,
-                SortOrder = sourceParameter.SortOrder,
-                IsRequired = sourceParameter.IsRequired,
-                IsInherited = true,
-                MinNumberValue = sourceParameter.MinNumberValue,
-                MaxNumberValue = sourceParameter.MaxNumberValue
-            };
-
-            _context.ClassParameters.Add(inheritedParameter);
-        }
-
-        await _context.SaveChangesAsync();
+        await _context.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT copy_parameter_to_descendants({classNodeId}, {parameterId})");
 
         var result = await BuildClassParameterDtoQuery()
             .Where(x => descendantIds.Contains(x.ClassNodeId))
@@ -430,41 +375,4 @@ public class ClassParametersController : ControllerBase
         return result;
     }
 
-    private async Task CopyParameterToDescendantsInternal(int classNodeId, int parameterId)
-    {
-        var sourceParameter = await _context.ClassParameters
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.ClassNodeId == classNodeId && x.Id == parameterId);
-
-        if (sourceParameter == null)
-            return;
-
-        var descendantIds = await GetDescendantClassIds(classNodeId);
-
-        foreach (var descendantId in descendantIds)
-        {
-            var alreadyExists = await _context.ClassParameters.AnyAsync(x =>
-                x.ClassNodeId == descendantId &&
-                x.ParameterDefinitionId == sourceParameter.ParameterDefinitionId);
-
-            if (alreadyExists)
-                continue;
-
-            var inheritedParameter = new ClassParameter
-            {
-                ClassNodeId = descendantId,
-                ParameterDefinitionId = sourceParameter.ParameterDefinitionId,
-                ParameterGroupId = sourceParameter.ParameterGroupId,
-                SortOrder = sourceParameter.SortOrder,
-                IsRequired = sourceParameter.IsRequired,
-                IsInherited = true,
-                MinNumberValue = sourceParameter.MinNumberValue,
-                MaxNumberValue = sourceParameter.MaxNumberValue
-            };
-
-            _context.ClassParameters.Add(inheritedParameter);
-        }
-
-        await _context.SaveChangesAsync();
-    }
 }

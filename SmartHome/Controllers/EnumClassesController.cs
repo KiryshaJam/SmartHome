@@ -158,6 +158,10 @@ public class EnumClassesController : ControllerBase
         if (enumClass == null)
             return NotFound($"Перечисление с id={id} не найдено.");
 
+        if (await _context.ParameterDefinitions.AnyAsync(x => x.EnumClassId == id) ||
+            await _context.ProductParameterValues.AnyAsync(x => x.EnumValue != null && x.EnumValue.EnumClassId == id))
+            return Conflict("Перечисление используется параметрами или изделиями.");
+
         _context.EnumClasses.Remove(enumClass);
         await _context.SaveChangesAsync();
 

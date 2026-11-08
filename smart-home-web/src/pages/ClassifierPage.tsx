@@ -1,3 +1,4 @@
+import { ClassNodeActions } from "../components/ClassNodeActions";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { apiGet, apiPost } from "../api/client";
 import type { ClassNodeDto, CreateClassNodeDto, MeasureUnitDto, TreeNodeDto } from "../types/api";
@@ -220,6 +221,7 @@ export function ClassifierPage() {
         </p>
       </header>
       {err && <div className="error-banner">{err}</div>}
+      {selectedNodeId != null && <ClassNodeActions key={selectedNodeId} id={selectedNodeId} onSaved={async () => { await refreshTrees(); setSelectedNodeId(null); }} />}
       <div className="card">
         {loadingRoots && <div className="hint">Загрузка корней…</div>}
         {roots && roots.length === 0 && <div className="hint">Корневые узлы не найдены.</div>}

@@ -71,55 +71,28 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION is_enum_value_allowed(
-    p_enum_class_id INTEGER,
-    p_string_value VARCHAR(512),
-    p_number_value NUMERIC(18, 4),
-    p_icon_value VARCHAR(512)
-)
-RETURNS BOOLEAN
-AS $$
-DECLARE
-result BOOLEAN;
+CREATE OR REPLACE FUNCTION is_enum_value_allowed(p_enum_class_id integer,p_string_value varchar,p_number_value numeric,p_icon_value varchar) RETURNS boolean LANGUAGE sql AS $$
+ SELECT num_nonnulls(p_string_value,p_number_value,p_icon_value)=1 AND EXISTS(
+ SELECT 1 FROM enum_value ev JOIN enum_class ec ON ec."Id"=ev."EnumClassId" WHERE ec."Id"=p_enum_class_id AND
+ CASE ec."ValueType" WHEN 1 THEN ev."StringValue"=p_string_value WHEN 2 THEN ev."NumberValue"=p_number_value WHEN 3 THEN ev."IconValue"=p_icon_value ELSE false END) $$;
+
+
+CREATE OR REPLACE FUNCTION update_enum_value_sort_order(p_enum_value_id integer,p_sort_order integer) RETURNS boolean LANGUAGE plpgsql AS $$
+DECLARE source enum_value; other integer; temporary integer := -2147483648;
 BEGIN
-SELECT EXISTS(
-    SELECT 1
-    FROM enum_value ev
-    WHERE ev."EnumClassId" = p_enum_class_id
-      AND (
-        (p_string_value IS NOT NULL AND ev."StringValue" = p_string_value)
-            OR (p_number_value IS NOT NULL AND ev."NumberValue" = p_number_value)
-            OR (p_icon_value IS NOT NULL AND ev."IconValue" = p_icon_value)
-        )
-) INTO result;
-
-RETURN result;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION update_enum_value_sort_order(
-    p_enum_value_id INTEGER,
-    p_sort_order INTEGER
-)
-RETURNS BOOLEAN
-AS $$
-DECLARE
-updated_count INTEGER;
-BEGIN
-UPDATE enum_value
-SET "SortOrder" = p_sort_order
-WHERE "Id" = p_enum_value_id;
-
-GET DIAGNOSTICS updated_count = ROW_COUNT;
-
-IF updated_count = 0 THEN
-    RAISE EXCEPTION 'Enum value with id % not found', p_enum_value_id;
-END IF;
-
-RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql;
+ PERFORM pg_advisory_xact_lock(734021,1);
+ SELECT * INTO source FROM enum_value WHERE "Id"=p_enum_value_id;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Значение перечисления не найдено.'; END IF;
+ IF source."SortOrder"=p_sort_order THEN RETURN true; END IF;
+ SELECT "Id" INTO other FROM enum_value WHERE "EnumClassId"=source."EnumClassId" AND "SortOrder"=p_sort_order;
+ IF other IS NOT NULL THEN
+   WHILE EXISTS(SELECT 1 FROM enum_value WHERE "EnumClassId"=source."EnumClassId" AND "SortOrder"=temporary) LOOP temporary:=temporary+1; END LOOP;
+   UPDATE enum_value SET "SortOrder"=temporary WHERE "Id"=other;
+ END IF;
+ UPDATE enum_value SET "SortOrder"=p_sort_order WHERE "Id"=p_enum_value_id;
+ IF other IS NOT NULL THEN UPDATE enum_value SET "SortOrder"=source."SortOrder" WHERE "Id"=other; END IF;
+ RETURN true;
+END $$;
 
 
 CREATE OR REPLACE FUNCTION get_enum_classes()

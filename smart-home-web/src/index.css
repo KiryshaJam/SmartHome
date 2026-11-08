@@ -456,3 +456,36 @@ table.data tr.selected td {
   width: 1.75rem;
   display: inline-block;
 }
+
+.devices-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+  gap: 1rem;
+  align-items: start;
+}
+.card, .card-nested, .input { min-width: 0; }
+.error-banner { white-space: pre-line; overflow-wrap: anywhere; }
+button:focus-visible, [role="button"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 800px) {
+  .app-layout { grid-template-columns: minmax(0, 1fr); }
+  .app-sidebar { width: auto; padding: .75rem; border-right: 0; border-bottom: 1px solid var(--border); gap: .6rem; }
+  .app-nav { flex-direction: row; flex-wrap: wrap; gap: .25rem; }
+  .nav-item { padding: .5rem .65rem; }
+  .nav-item__desc, .sidebar-api { display: none; }
+  .app-main { padding: .75rem; }
+  .devices-layout { grid-template-columns: minmax(0, 1fr); }
+  .card { padding: 1rem; }
+  .table-wrap { max-width: 100%; }
+  .tree-row { overflow-wrap: anywhere; }
+}
+
+.bom-panel { display: grid; gap: .75rem; border-top: 1px solid var(--border, #ddd); padding-top: 1rem; min-width: 0; }
+.bom-grid { display: flex; flex-wrap: wrap; gap: .7rem; align-items: end; }
+.bom-grid > label { flex: 1 1 160px; min-width: 0; }
+.bom-form { display: grid; gap: .65rem; }
+.bom-panel summary { cursor: pointer; padding: .6rem 0; font-weight: 600; }
+.bom-panel details > label { display: block; margin-bottom: .6rem; }
+.bom-panel .table-scroll { overflow-x: auto; max-width: 100%; }
+.bom-panel table { min-width: 520px; }
+.bom-panel td { overflow-wrap: anywhere; }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiGet } from "../api/client";
 import type { ClassNodeDto, ProductDto } from "../types/api";
-import type { AppView } from "./AppShell";
+import type { AppView } from "../components/AppShell";
 
 export function Dashboard({ onNavigate }: { onNavigate: (v: AppView) => void }) {
   const [products, setProducts] = useState<ProductDto[] | null>(null);
