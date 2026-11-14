@@ -1,6 +1,6 @@
 """Run only against a disposable database/API: python3 tests/api_regression.py --allow-test-writes."""
-import json, sys, urllib.request, urllib.error, uuid
-BASE = 'http://127.0.0.1:5156/api'
+import json, sys, urllib.request, urllib.error, uuid, os
+BASE = os.environ.get('SMARTHOME_TEST_API', 'http://127.0.0.1:5156/api')
 if '--allow-test-writes' not in sys.argv:
     sys.exit('Explicit --allow-test-writes is required; point API to a disposable database first.')
 prefix = 'test-' + uuid.uuid4().hex[:10]

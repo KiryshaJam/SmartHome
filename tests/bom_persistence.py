@@ -16,8 +16,8 @@ parser.add_argument('--base', default='http://127.0.0.1:5156/api')
 a = parser.parse_args()
 with open(a.fixture) as f:
     fixture = json.load(f)
-revision, cls = int(fixture['orderRevision']), int(fixture['materialClass'])
-with urllib.request.urlopen(f'{a.base}/bom/order-revisions/{revision}/totals?classId={cls}') as r:
+revision, cls = int(fixture['order']), int(fixture['materialClass'])
+with urllib.request.urlopen(f'{a.base}/bom/orders/{revision}/totals?classId={cls}') as r:
     actual = json.load(r)
 assert actual == fixture['expected'], (actual, fixture['expected'])
 sql = f"SELECT coalesce(jsonb_agg(t),'[]') FROM calc_order_bom({revision},{cls}) t"

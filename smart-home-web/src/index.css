@@ -489,3 +489,32 @@ button:focus-visible, [role="button"]:focus-visible { outline: 2px solid var(--a
 .bom-panel .table-scroll { overflow-x: auto; max-width: 100%; }
 .bom-panel table { min-width: 520px; }
 .bom-panel td { overflow-wrap: anywhere; }
+
+/* Specification editing needs the width of a page, including on classroom laptops. */
+.devices-layout { grid-template-columns: minmax(220px, .7fr) minmax(0, 2fr); }
+.bom-tabs { display: flex; flex-wrap: wrap; gap: .5rem; }
+.bom-panel [hidden] { display: none; }
+.bom-panel fieldset { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: .75rem; margin: 0; min-width: 0; }
+.bom-panel legend { color: var(--text-primary); padding: 0 .35rem; }
+.bom-panel .checkbox-label { display: inline-flex; align-items: center; gap: .4rem; margin-right: .8rem; }
+.bom-panel .checkbox-label input { width: auto; }
+.bom-panel caption { text-align: left; color: var(--text-primary); padding: .6rem 0; }
+.bom-panel .expression-tools { font-size: 12px; }
+.bom-panel code { overflow-wrap: anywhere; }
+.bom-panel .card-nested { background: var(--bg-page); padding: .75rem; border-radius: var(--radius-sm); }
+@media (max-width: 1000px) {
+  .devices-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+.friendly-expression { display: grid; gap: .65rem; }
+.expression-reading { margin: 0; padding: .6rem .75rem; border-left: 3px solid var(--accent); background: var(--accent-soft); color: var(--text-primary); overflow-wrap: anywhere; }
+.friendly-value, .friendly-condition { display: grid; gap: .6rem; min-width: 0; }
+.friendly-comparison, .friendly-calculation { display: flex; flex-wrap: wrap; align-items: start; gap: .6rem; }
+.friendly-comparison > *, .friendly-calculation > * { flex: 1 1 150px; min-width: 0; }
+.bom-panel .expression-advanced { border-top: 1px solid var(--border); padding-top: .3rem; }
+.bom-panel .expression-advanced summary { font-size: 12px; color: var(--text-secondary); }
+.bom-panel .condition-item { margin-top: .5rem; }
+.catalog-parameters > summary { cursor: pointer; font-weight: 600; }
+.bom-panel .friendly-expression--simple .expression-source { display: none; }
+.back-to-catalog { display: none; }
+@media (max-width: 1000px) { .back-to-catalog { display: inline-flex; margin-bottom: .75rem; } }

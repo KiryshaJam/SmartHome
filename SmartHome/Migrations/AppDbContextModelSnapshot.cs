@@ -22,7 +22,7 @@ namespace SmartHome.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("SmartHome.Bom.BomOrder", b =>
+            modelBuilder.Entity("SmartHome.Models.Bom.BomOrder", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -38,50 +38,190 @@ namespace SmartHome.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<int>("UpdateToken")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Number")
                         .IsUnique();
 
-                    b.ToTable("bom_order", (string)null);
+                    b.ToTable("bom_order", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_bom_order_token", "\"UpdateToken\">0");
+                        });
                 });
 
-            modelBuilder.Entity("SmartHome.Bom.BomOrderRevision", b =>
+            modelBuilder.Entity("SmartHome.Models.Bom.BomOrderLine", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Lines")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<int>("OrderId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("PreviousId")
+                    b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                    b.Property<int>("ConfiguredRevisionId")
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric");
 
-                    b.HasIndex("OrderId");
+                    b.HasKey("OrderId", "SortOrder");
 
-                    b.HasIndex("PreviousId");
+                    b.HasIndex("ConfiguredRevisionId");
 
-                    b.ToTable("bom_order_revision", (string)null);
+                    b.ToTable("bom_order_line", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_bom_order_line", "\"SortOrder\">=0 AND \"Quantity\">0 AND \"Quantity\"<=1000000000");
+                        });
                 });
 
-            modelBuilder.Entity("SmartHome.Bom.BomRevision", b =>
+            modelBuilder.Entity("SmartHome.Models.Bom.BomParameter", b =>
+                {
+                    b.Property<int>("RevisionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("DateTimeTicks")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("EnumValueId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Formula")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<int?>("IntegerValue")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("Max")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("Min")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("NumberValue")
+                        .HasColumnType("numeric");
+
+                    b.Property<bool>("Required")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StringValue")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("RevisionId", "DefinitionId");
+
+                    b.HasIndex("DefinitionId");
+
+                    b.HasIndex("EnumValueId");
+
+                    b.ToTable("bom_parameter", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_bom_parameter_bounds", "\"SortOrder\">=0 AND \"Type\" BETWEEN 1 AND 5 AND (\"Min\" IS NULL OR \"Max\" IS NULL OR \"Min\"<=\"Max\")");
+
+                            t.HasCheckConstraint("CK_bom_parameter_value", "num_nonnulls(\"IntegerValue\",\"NumberValue\",\"StringValue\",\"DateTimeTicks\",\"EnumValueId\")<=1 AND (\"IntegerValue\" IS NULL OR \"Type\"=1) AND (\"NumberValue\" IS NULL OR \"Type\"=2) AND (\"StringValue\" IS NULL OR \"Type\"=3) AND (\"DateTimeTicks\" IS NULL OR \"Type\"=4) AND (\"EnumValueId\" IS NULL OR \"Type\"=5)");
+                        });
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Bom.BomParameterOption", b =>
+                {
+                    b.Property<int>("RevisionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EnumValueId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("RevisionId", "DefinitionId", "EnumValueId");
+
+                    b.HasIndex("EnumValueId");
+
+                    b.ToTable("bom_parameter_option", (string)null);
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Bom.BomPosition", b =>
+                {
+                    b.Property<int>("RevisionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PositionKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("ComponentRevisionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Condition")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<bool>("Excluded")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("ForQuantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Formula")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<decimal?>("ResolvedQuantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("RevisionId", "PositionKey");
+
+                    b.HasIndex("ComponentRevisionId");
+
+                    b.ToTable("bom_position", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_bom_position", "\"PositionKey\" ~ '^[A-Za-z0-9_-]{1,64}$' AND \"SortOrder\">=0 AND (\"Excluded\" OR (\"ComponentRevisionId\" IS NOT NULL AND \"Amount\">0 AND \"Amount\"<=1000000000 AND \"ForQuantity\">0 AND \"ForQuantity\"<=1000000000 AND \"Amount\"/\"ForQuantity\"<=1000000000))");
+                        });
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Bom.BomPositionBinding", b =>
+                {
+                    b.Property<int>("RevisionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PositionKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("DefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Expression")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.HasKey("RevisionId", "PositionKey", "DefinitionId");
+
+                    b.HasIndex("DefinitionId");
+
+                    b.ToTable("bom_position_binding", (string)null);
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Bom.BomRevision", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -95,9 +235,15 @@ namespace SmartHome.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Document")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
+                    b.Property<bool>("IsConfigured")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFinalized")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<int?>("PreviousId")
                         .HasColumnType("integer");
@@ -110,6 +256,18 @@ namespace SmartHome.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
+                    b.Property<decimal>("RootAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("RootForQuantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("RootQuantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("SourceRevisionId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UnitId")
                         .HasColumnType("integer");
 
@@ -119,41 +277,46 @@ namespace SmartHome.Migrations
 
                     b.HasIndex("PreviousId");
 
+                    b.HasIndex("SourceRevisionId");
+
                     b.HasIndex("UnitId");
 
-                    b.HasIndex("ProductId", "Id");
+                    b.HasIndex("ProductId", "PreviousId")
+                        .IsUnique()
+                        .HasFilter("NOT \"IsConfigured\"");
 
-                    b.ToTable("bom_revision", (string)null);
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ProductId", "PreviousId"), false);
+
+                    b.ToTable("bom_revision", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_bom_revision_kind", "(NOT \"IsConfigured\" AND \"SourceRevisionId\" IS NULL AND \"Name\" IS NULL) OR (\"IsConfigured\" AND \"SourceRevisionId\" IS NOT NULL AND \"PreviousId\" IS NULL AND \"BaseRevisionId\" IS NULL)");
+                        });
                 });
 
-            modelBuilder.Entity("SmartHome.Bom.BomVariant", b =>
+            modelBuilder.Entity("SmartHome.Models.Bom.BomRule", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
                     b.Property<int>("RevisionId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Snapshot")
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Expression")
                         .IsRequired()
-                        .HasColumnType("jsonb");
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
-                    b.HasIndex("RevisionId");
+                    b.HasKey("RevisionId", "SortOrder");
 
-                    b.ToTable("bom_variant", (string)null);
+                    b.ToTable("bom_rule", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_bom_rule", "\"SortOrder\">=0 AND length(trim(\"Expression\"))>0 AND length(trim(\"Message\"))>0");
+                        });
                 });
 
             modelBuilder.Entity("SmartHome.Models.ClassNode", b =>
@@ -1270,28 +1433,93 @@ namespace SmartHome.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SmartHome.Bom.BomOrderRevision", b =>
+            modelBuilder.Entity("SmartHome.Models.Bom.BomOrderLine", b =>
                 {
-                    b.HasOne("SmartHome.Bom.BomOrder", null)
+                    b.HasOne("SmartHome.Models.Bom.BomRevision", null)
                         .WithMany()
-                        .HasForeignKey("OrderId")
+                        .HasForeignKey("ConfiguredRevisionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("SmartHome.Bom.BomOrderRevision", null)
-                        .WithMany()
-                        .HasForeignKey("PreviousId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                    b.HasOne("SmartHome.Models.Bom.BomOrder", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("SmartHome.Bom.BomRevision", b =>
+            modelBuilder.Entity("SmartHome.Models.Bom.BomParameter", b =>
                 {
-                    b.HasOne("SmartHome.Bom.BomRevision", null)
+                    b.HasOne("SmartHome.Models.ParameterDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("DefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartHome.Models.EnumValue", null)
+                        .WithMany()
+                        .HasForeignKey("EnumValueId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SmartHome.Models.Bom.BomRevision", null)
+                        .WithMany()
+                        .HasForeignKey("RevisionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Bom.BomParameterOption", b =>
+                {
+                    b.HasOne("SmartHome.Models.EnumValue", null)
+                        .WithMany()
+                        .HasForeignKey("EnumValueId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartHome.Models.Bom.BomParameter", null)
+                        .WithMany()
+                        .HasForeignKey("RevisionId", "DefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Bom.BomPosition", b =>
+                {
+                    b.HasOne("SmartHome.Models.Bom.BomRevision", null)
+                        .WithMany()
+                        .HasForeignKey("ComponentRevisionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SmartHome.Models.Bom.BomRevision", null)
+                        .WithMany()
+                        .HasForeignKey("RevisionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Bom.BomPositionBinding", b =>
+                {
+                    b.HasOne("SmartHome.Models.ParameterDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("DefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartHome.Models.Bom.BomPosition", null)
+                        .WithMany()
+                        .HasForeignKey("RevisionId", "PositionKey")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Bom.BomRevision", b =>
+                {
+                    b.HasOne("SmartHome.Models.Bom.BomRevision", null)
                         .WithMany()
                         .HasForeignKey("BaseRevisionId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("SmartHome.Bom.BomRevision", null)
+                    b.HasOne("SmartHome.Models.Bom.BomRevision", null)
                         .WithMany()
                         .HasForeignKey("PreviousId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1302,6 +1530,11 @@ namespace SmartHome.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("SmartHome.Models.Bom.BomRevision", null)
+                        .WithMany()
+                        .HasForeignKey("SourceRevisionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("SmartHome.Models.MeasureUnit", null)
                         .WithMany()
                         .HasForeignKey("UnitId")
@@ -1309,9 +1542,9 @@ namespace SmartHome.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SmartHome.Bom.BomVariant", b =>
+            modelBuilder.Entity("SmartHome.Models.Bom.BomRule", b =>
                 {
-                    b.HasOne("SmartHome.Bom.BomRevision", null)
+                    b.HasOne("SmartHome.Models.Bom.BomRevision", null)
                         .WithMany()
                         .HasForeignKey("RevisionId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1434,6 +1667,11 @@ namespace SmartHome.Migrations
                     b.Navigation("EnumValue");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Bom.BomOrder", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("SmartHome.Models.ClassNode", b =>

@@ -1,3 +1,4 @@
+import { useConfirmLeave } from "../components/UnsavedChanges";
 import { BomPanel } from "../components/BomPanel";
 import { ProductActions } from "../components/ProductActions";
 import { IconValue } from "../components/EnumValuesManager";
@@ -38,6 +39,8 @@ function displayParamValue(p: ProductParameterValueDto): string {
 }
 
 export function DevicesPage({ initialId = null }: { initialId?: number | null }) {
+  const confirmLeave = useConfirmLeave();
+  const selectProduct = (id: number) => { if (id !== selectedId && confirmLeave()) setSelectedId(id); };
   const [products, setProducts] = useState<ProductDto[] | null>(null);
   const [leaves, setLeaves] = useState<ClassNodeDto[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -47,6 +50,12 @@ export function DevicesPage({ initialId = null }: { initialId?: number | null })
   const [card, setCard] = useState<ProductWithParametersDto | null>(null);
   const [loadingCard, setLoadingCard] = useState(false);
   const [enumCache, setEnumCache] = useState<Record<number, EnumValueDto[]>>({});
+  const cardElement = useRef<HTMLDivElement>(null);
+  const catalogElement = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (card && window.matchMedia("(max-width: 1000px)").matches) cardElement.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }, [card?.id]);
+  const [catalogQuery, setCatalogQuery] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newShort, setNewShort] = useState("");
@@ -117,6 +126,7 @@ export function DevicesPage({ initialId = null }: { initialId?: number | null })
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
     if (newClassId === "") return;
+    if (!confirmLeave()) return;
     setSaving(true);
     setErr(null);
     try {
@@ -126,6 +136,7 @@ export function DevicesPage({ initialId = null }: { initialId?: number | null })
       );
       await loadProducts();
       setSelectedId(created.id);
+      setCatalogQuery("");
       setCreateOpen(false);
       setNewName("");
       setNewShort("");
@@ -137,7 +148,7 @@ export function DevicesPage({ initialId = null }: { initialId?: number | null })
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Удалить устройство из каталога?")) return;
+    if (!confirmLeave() || !confirm("Удалить изделие из каталога?")) return;
     setErr(null);
     try {
       await apiDelete(`/api/products/${id}`);
@@ -160,20 +171,20 @@ export function DevicesPage({ initialId = null }: { initialId?: number | null })
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <header style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "flex-end" }}>
         <div style={{ flex: "1 1 240px" }}>
-          <h1 className="page-title">Устройства</h1>
+          <h1 className="page-title">Изделия</h1>
           <p className="hint" style={{ marginTop: "0.35rem" }}>
             Каталог изделий и редактирование значений параметров класса.
           </p>
         </div>
         <button type="button" className="btn-warm" onClick={() => setCreateOpen((v) => !v)}>
-          {createOpen ? "Закрыть форму" : "Добавить устройство"}
+          {createOpen ? "Закрыть форму" : "Добавить изделие"}
         </button>
       </header>
       {err && <div className="error-banner">{err}</div>}
 
       {createOpen && (
         <form className="card" style={{ display: "grid", gap: "0.75rem", maxWidth: "480px" }} onSubmit={(e) => void handleCreate(e)}>
-          <div style={{ fontWeight: 600 }}>Новое устройство</div>
+          <div style={{ fontWeight: 600 }}>Новое изделие</div>
           <div>
             <label htmlFor="dn">Название</label>
             <input id="dn" className="input" required value={newName} onChange={(e) => setNewName(e.target.value)} />
@@ -205,13 +216,14 @@ export function DevicesPage({ initialId = null }: { initialId?: number | null })
       )}
 
       <div className="devices-layout">
-        <div className="card card--flush">
+        <div ref={catalogElement} className="card card--flush">
           <div className="card-header">
             <span>Каталог</span>
             <span className="hint" style={{ marginLeft: "0.5rem" }}>
               {products ? `${products.length} шт.` : ""}
             </span>
           </div>
+          <div style={{ padding: ".75rem" }}><label>Найти изделие<input className="input" value={catalogQuery} placeholder="Название изделия или класс" onChange={e => setCatalogQuery(e.target.value)} /></label></div>
           <div className="table-wrap" style={{ border: "none", maxHeight: "min(70vh, 720px)" }}>
             <table className="data">
               <thead>
@@ -222,15 +234,15 @@ export function DevicesPage({ initialId = null }: { initialId?: number | null })
                 </tr>
               </thead>
               <tbody>
-                {products?.map((p) => (
+                {products?.filter(p => `${p.name} ${p.shortName} ${p.classNodeName}`.toLocaleLowerCase("ru-RU").includes(catalogQuery.trim().toLocaleLowerCase("ru-RU"))).map((p) => (
                   <tr
                     key={p.id}
                     className={selectedId === p.id ? "selected" : undefined}
                     style={{ cursor: "pointer" }}
-                    onClick={() => setSelectedId(p.id)}
+                    onClick={() => selectProduct(p.id)}
                   >
                     <td>
-                      <button type="button" className="btn-ghost" onClick={() => setSelectedId(p.id)}>{p.name}</button>
+                      <button type="button" className="btn-ghost" onClick={e => { e.stopPropagation(); selectProduct(p.id); }}>{p.name}</button>
                       <div className="hint mono" style={{ fontSize: "0.82rem" }}>
                         {p.shortName}
                       </div>
@@ -255,8 +267,9 @@ export function DevicesPage({ initialId = null }: { initialId?: number | null })
           </div>
         </div>
 
-        <div className="card" style={{ minHeight: "280px" }}>
-          {!selectedId && <div className="hint">Выберите устройство слева.</div>}
+        <div ref={cardElement} className="card" style={{ minHeight: "280px" }}>
+          {selectedId && <button type="button" className="btn-ghost back-to-catalog" onClick={() => catalogElement.current?.scrollIntoView({ block: "start", behavior: "smooth" })}>← Вернуться к списку изделий</button>}
+          {!selectedId && <div className="hint">Выберите изделие слева.</div>}
           {selectedId && loadingCard && <div className="hint">Загрузка карточки…</div>}
           {selectedId && !loadingCard && card && card.id === selectedId && selectedProduct && (
             <ProductCardView key={card.id}
@@ -395,7 +408,7 @@ function AddParameterToClassSection({
       <div
         className="card-nested" style={{ marginBottom: "0.5rem" }}
       >
-        <div style={{ fontWeight: 600, marginBottom: "0.35rem" }}>Новый параметр у устройства</div>
+        <div style={{ fontWeight: 600, marginBottom: "0.35rem" }}>Новый параметр у изделия</div>
         <p className="hint" style={{ margin: 0 }}>
           Класс «{product.classNodeName}» уже содержит все доступные описания параметров. Создайте новое описание
           на странице «Справочники», затем вернитесь сюда.
@@ -408,9 +421,9 @@ function AddParameterToClassSection({
     <div
       className="card-nested" style={{ marginBottom: "1rem" }}
     >
-      <div style={{ fontWeight: 600, marginBottom: "0.35rem" }}>Добавить параметр к классу этого устройства</div>
+      <div style={{ fontWeight: 600, marginBottom: "0.35rem" }}>Добавить параметр к классу этого изделия</div>
       <p className="hint" style={{ margin: "0 0 0.75rem" }}>
-        Параметр привязывается к классу «{product.classNodeName}»: строка появится у всех устройств этого класса.
+        Параметр привязывается к классу «{product.classNodeName}»: строка появится у всех изделий этого класса.
         Сначала список свойств задаётся в справочниках, здесь вы подключаете его к классу и группе на карточке.
       </p>
       {formErr && <div className="error-banner" style={{ marginBottom: "0.5rem" }}>{formErr}</div>}
@@ -420,6 +433,7 @@ function AddParameterToClassSection({
           <select
             className="input"
             required
+            aria-label="Описание параметра"
             value={defId === "" ? "" : String(defId)}
             onChange={(e) => setDefId(e.target.value ? Number.parseInt(e.target.value, 10) : "")}
           >
@@ -529,8 +543,11 @@ function ProductCardView({
           {product.classNodeName}
         </div>
       </div>
-      <ProductActions key={card.id} card={card} onSaved={onSaved} />
-      <BomPanel productId={product.id} onCreated={onSaved} />
+      <BomPanel key={product.id} productId={product.id} onCreated={onSaved} />
+      <details className="catalog-parameters">
+        <summary>Параметры каталога и класс изделия</summary>
+        <p className="hint">Для добавления параметра: подключите его к классу здесь, затем нажмите «Добавить новые параметры класса» в разделе спецификации «Параметры и правила».</p>
+        <ProductActions card={card} onSaved={onSaved} />
       <AddParameterToClassSection product={product} card={card} onAdded={onSaved} />
       {grouped.map(([groupName, params]) => (
         <div key={groupName}>
@@ -549,6 +566,7 @@ function ProductCardView({
           </div>
         </div>
       ))}
+      </details>
     </div>
   );
 }

@@ -12,6 +12,6 @@ export function ProductActions({ card, onSaved }: { card: ProductWithParametersD
   return <section className="card-nested" style={{ display: "grid", gap: ".5rem" }}>
     {error && <div className="error-banner" role="alert">{error}</div>}
     <label>Перенести в класс<select className="input" value={target} onChange={e => setTarget(Number(e.target.value))}>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-    <button disabled={busy || target === card.classNodeId} onClick={() => void run(() => apiPut(`/api/products/${card.id}/move`, { newClassNodeId: target }))}>Перенести устройство</button>
+    <button disabled={busy || target === card.classNodeId} onClick={() => void run(() => apiPut(`/api/products/${card.id}/move`, { newClassNodeId: target }))}>Перенести изделие</button>
   </section>;
 }

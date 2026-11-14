@@ -25,7 +25,7 @@ export function AppShell({
       <aside className="app-sidebar">
         <div>
           <div className="sidebar-brand">Умный дом</div>
-          <div className="sidebar-tagline">Каталог и параметры изделий</div>
+          <div className="sidebar-tagline">Изделия, спецификации и заказы</div>
         </div>
         <nav className="app-nav">
           {nav.map((item) => {
@@ -43,12 +43,6 @@ export function AppShell({
             );
           })}
         </nav>
-        <div className="sidebar-api">
-          API:{" "}
-          <span className="mono">
-            {import.meta.env.DEV ? "proxy /api → localhost:5156" : import.meta.env.VITE_API_URL ?? "—"}
-          </span>
-        </div>
       </aside>
       <main className="app-main">{children}</main>
     </div>
