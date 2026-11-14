@@ -143,7 +143,7 @@ export function OrdersPage() {
   }
   return (
     <div className="card bom-panel">
-      <h1>Заказы</h1>
+      <h1 className="page-title">Заказы</h1>
       <p className="hint">
         Заказ содержит готовые исполнения с фиксированным составом. После изменения
         позиций сохраните заказ — общий расход рассчитается автоматически.
@@ -259,7 +259,7 @@ export function OrdersPage() {
             />
           </label>
           <button
-            className="btn-ghost"
+            className="btn-danger"
             onClick={() => setLines(lines.filter((_, j) => j !== i))}
           >
             Удалить позицию
