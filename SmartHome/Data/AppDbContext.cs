@@ -24,6 +24,7 @@ public partial class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         ConfigureBom(modelBuilder);
+        ConfigureRoutes(modelBuilder);
 
         modelBuilder.Entity<MeasureUnit>(entity =>
         {

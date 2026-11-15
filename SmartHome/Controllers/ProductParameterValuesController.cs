@@ -52,7 +52,9 @@ public class ProductParameterValuesController : ControllerBase
             Name = product.Name,
             ShortName = product.ShortName,
             ClassNodeId = product.ClassNodeId,
-            ClassNodeName = product.ClassNode.Name,
+            PurchasePrice = product.PurchasePrice,
+                UnitId = product.ClassNode.MeasureUnitId,
+                ClassNodeName = product.ClassNode.Name,
             Parameters = parameters
         };
 

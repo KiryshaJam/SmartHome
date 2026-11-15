@@ -567,17 +567,20 @@ button:focus-visible, [role="button"]:focus-visible { outline: 2px solid var(--a
   background: var(--on-dark); }
 .route-operation summary { cursor:pointer;font-weight:600;
   color: var(--accent); }
-.route-input { display:grid;grid-template-columns:minmax(220px,2fr) repeat(3,minmax(110px,1fr)) auto;gap:.75rem;align-items:start;margin:1rem 0; }
+.route-input { display:flex;flex-wrap:wrap;gap:.75rem;align-items:start;margin:1rem 0;padding:1rem 0;border-bottom:1px solid var(--border); }
+.route-input > label { flex:1 1 150px;min-width:0; }
+.route-input > label:first-child { flex:2 1 240px; }
+.route-input .input { min-width:0;width:100%; }
+.route-grid > label { min-width:0; }
 .route-actions { display:flex;gap:1rem;flex-wrap:wrap;align-items:start;margin:1rem 0; }
 .route-actions > label { flex: 1 1 220px; min-width: 0; max-width: 360px; }
 .route-actions:has(> label) > button { margin-top: 1.65rem; }
 .route-table-scroll { overflow-x:auto; min-width: 0; max-width: 100%; }
 .route-table-scroll table { min-width: 600px; }
-.route-input > button { align-self: start; margin-top: 1.65rem; }
+.route-input > button { flex:0 0 auto;align-self:start;margin-top:1.65rem; }
 .route-results h3 { margin-top:1.5rem; }
-@media(max-width:1000px) { .route-input { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:600px) {
-  .route-input { grid-template-columns:minmax(0,1fr); }
+  .route-input > label, .route-input > label:first-child { flex-basis:100%; }
   .route-input > button, .route-actions:has(> label) > button { margin-top: 0; }
 }
 

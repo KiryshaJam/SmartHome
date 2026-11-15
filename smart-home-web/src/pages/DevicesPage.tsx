@@ -1,3 +1,4 @@
+import { ProductRoutePrice } from "../components/ProductRoutePrice";
 import { useConfirmLeave } from "../components/UnsavedChanges";
 import { BomPanel } from "../components/BomPanel";
 import { ProductActions } from "../components/ProductActions";
@@ -38,7 +39,7 @@ function displayParamValue(p: ProductParameterValueDto): string {
   }
 }
 
-export function DevicesPage({ initialId = null }: { initialId?: number | null }) {
+export function DevicesPage({ initialId = null, onOpenRoute }: { initialId?: number | null; onOpenRoute: (id: number) => void }) {
   const confirmLeave = useConfirmLeave();
   const selectProduct = (id: number) => { if (id !== selectedId && confirmLeave()) setSelectedId(id); };
   const [products, setProducts] = useState<ProductDto[] | null>(null);
@@ -71,7 +72,7 @@ export function DevicesPage({ initialId = null }: { initialId?: number | null })
     let cancelled = false;
     (async () => {
       try {
-        const l = await apiGet<ClassNodeDto[]>("/api/classnodes/leaves");
+        const l = await apiGet<ClassNodeDto[]>("/api/classnodes/leaves?productOnly=true");
         if (!cancelled) {
           setLeaves(l);
           if (l.length && newClassId === "") setNewClassId(l[0]!.id);
@@ -274,6 +275,7 @@ export function DevicesPage({ initialId = null }: { initialId?: number | null })
           {selectedId && !loadingCard && card && card.id === selectedId && selectedProduct && (
             <ProductCardView key={card.id}
               product={selectedProduct}
+              onOpenRoute={() => onOpenRoute(selectedProduct.id)}
               card={card}
               enumCache={enumCache}
               onEnsureEnum={(id) => void ensureEnum(id)}
@@ -507,12 +509,14 @@ function AddParameterToClassSection({
 }
 
 function ProductCardView({
+  onOpenRoute,
   product,
   card,
   enumCache,
   onEnsureEnum,
   onSaved,
 }: {
+  onOpenRoute: () => void;
   product: ProductDto;
   card: ProductWithParametersDto;
   enumCache: Record<number, EnumValueDto[]>;
@@ -543,6 +547,7 @@ function ProductCardView({
           {product.classNodeName}
         </div>
       </div>
+      <ProductRoutePrice key={`${product.id}:${product.purchasePrice}`} product={product} onSaved={onSaved} onOpenRoute={onOpenRoute} />
       <BomPanel key={product.id} productId={product.id} onCreated={onSaved} />
       <details className="catalog-parameters">
         <summary>Параметры каталога и класс изделия</summary>

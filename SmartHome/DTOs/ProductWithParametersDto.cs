@@ -2,6 +2,9 @@ namespace SmartHome.DTOs;
 
 public class ProductWithParametersDto
 {
+    public decimal? PurchasePrice { get; set; }
+    public int? UnitId { get; set; }
+
     public int Id { get; set; }
 
     public string Name { get; set; } = null!;

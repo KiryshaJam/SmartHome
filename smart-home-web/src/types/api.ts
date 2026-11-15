@@ -32,6 +32,8 @@ export interface TreeNodeDto {
 }
 
 export interface ProductDto {
+  purchasePrice: number | null;
+  unitId: number | null;
   id: number;
   name: string;
   shortName: string;
@@ -72,6 +74,8 @@ export interface ProductParameterValueDto {
 }
 
 export interface ProductWithParametersDto {
+  purchasePrice: number | null;
+  unitId: number | null;
   id: number;
   name: string;
   shortName: string;

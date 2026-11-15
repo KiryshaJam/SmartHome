@@ -29,6 +29,8 @@ public class ProductsController : ControllerBase
                 Name = x.Name,
                 ShortName = x.ShortName,
                 ClassNodeId = x.ClassNodeId,
+                PurchasePrice = x.PurchasePrice,
+                UnitId = x.ClassNode.MeasureUnitId,
                 ClassNodeName = x.ClassNode.Name
             })
             .ToListAsync();
@@ -48,6 +50,8 @@ public class ProductsController : ControllerBase
                 Name = x.Name,
                 ShortName = x.ShortName,
                 ClassNodeId = x.ClassNodeId,
+                PurchasePrice = x.PurchasePrice,
+                UnitId = x.ClassNode.MeasureUnitId,
                 ClassNodeName = x.ClassNode.Name
             })
             .FirstOrDefaultAsync();
@@ -77,7 +81,8 @@ public class ProductsController : ControllerBase
         {
             Name = dto.Name,
             ShortName = dto.ShortName,
-            ClassNodeId = dto.ClassNodeId
+            ClassNodeId = dto.ClassNodeId,
+            PurchasePrice = dto.PurchasePrice
         };
 
         _context.Products.Add(product);
@@ -92,6 +97,8 @@ public class ProductsController : ControllerBase
                 Name = x.Name,
                 ShortName = x.ShortName,
                 ClassNodeId = x.ClassNodeId,
+                PurchasePrice = x.PurchasePrice,
+                UnitId = x.ClassNode.MeasureUnitId,
                 ClassNodeName = x.ClassNode.Name
             })
             .FirstAsync();
@@ -99,6 +106,16 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
     
+    [HttpPut("{id:int}/price")]
+    public async Task<IActionResult> Price(int id, SmartHome.DTOs.Routes.PriceWrite input)
+    {
+        var p = await _context.Products.FindAsync(id);
+        if (p == null) return NotFound(new { message = "Изделие не найдено." });
+        p.PurchasePrice = input.PurchasePrice;
+        await _context.SaveChangesAsync();
+        return Ok(new { p.Id, p.PurchasePrice });
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -138,6 +155,8 @@ public class ProductsController : ControllerBase
                 Name = x.Name,
                 ShortName = x.ShortName,
                 ClassNodeId = x.ClassNodeId,
+                PurchasePrice = x.PurchasePrice,
+                UnitId = x.ClassNode.MeasureUnitId,
                 ClassNodeName = x.ClassNode.Name
             })
             .FirstAsync();

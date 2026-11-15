@@ -43,6 +43,8 @@ public class ProductSearchController : ControllerBase
                 Name = product.Name,
                 ShortName = product.ShortName,
                 ClassNodeId = product.ClassNodeId,
+                PurchasePrice = product.PurchasePrice,
+                UnitId = product.ClassNode.MeasureUnitId,
                 ClassNodeName = product.ClassNode.Name,
                 Parameters = parameters
             });
@@ -81,6 +83,8 @@ public class ProductSearchController : ControllerBase
                 Name = product.Name,
                 ShortName = product.ShortName,
                 ClassNodeId = product.ClassNodeId,
+                PurchasePrice = product.PurchasePrice,
+                UnitId = product.ClassNode.MeasureUnitId,
                 ClassNodeName = product.ClassNode.Name,
                 Parameters = parameters
             });
@@ -135,6 +139,8 @@ public class ProductSearchController : ControllerBase
                 Name = product.Name,
                 ShortName = product.ShortName,
                 ClassNodeId = product.ClassNodeId,
+                PurchasePrice = product.PurchasePrice,
+                UnitId = product.ClassNode.MeasureUnitId,
                 ClassNodeName = product.ClassNode.Name,
                 Parameters = parameters
             });
@@ -191,6 +197,8 @@ public class ProductSearchController : ControllerBase
                 Name = product.Name,
                 ShortName = product.ShortName,
                 ClassNodeId = product.ClassNodeId,
+                PurchasePrice = product.PurchasePrice,
+                UnitId = product.ClassNode.MeasureUnitId,
                 ClassNodeName = product.ClassNode.Name,
                 Parameters = parameters
             });

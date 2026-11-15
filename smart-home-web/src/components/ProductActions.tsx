@@ -7,7 +7,7 @@ export function ProductActions({ card, onSaved }: { card: ProductWithParametersD
   const [target, setTarget] = useState(card.classNodeId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  useEffect(() => { let active = true; apiGet<ClassNodeDto[]>("/api/classnodes/leaves").then(c => { if (active) setClasses(c); }).catch(e => { if (active) setError(e.message); }); return () => { active = false; }; }, []);
+  useEffect(() => { let active = true; apiGet<ClassNodeDto[]>("/api/classnodes/leaves?productOnly=true").then(c => { if (active) setClasses(c); }).catch(e => { if (active) setError(e.message); }); return () => { active = false; }; }, []);
   async function run(action: () => Promise<unknown>) { setBusy(true); setError(""); try { await action(); await onSaved(); } catch (e) { setError(e instanceof Error ? e.message : "Ошибка"); } finally { setBusy(false); } }
   return <section className="card-nested" style={{ display: "grid", gap: ".5rem" }}>
     {error && <div className="error-banner" role="alert">{error}</div>}

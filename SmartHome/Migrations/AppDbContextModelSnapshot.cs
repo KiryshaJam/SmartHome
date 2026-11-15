@@ -1257,6 +1257,9 @@ namespace SmartHome.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<decimal?>("PurchasePrice")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("ShortName")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -1272,7 +1275,10 @@ namespace SmartHome.Migrations
                     b.HasIndex("ShortName")
                         .IsUnique();
 
-                    b.ToTable("product", (string)null);
+                    b.ToTable("product", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_product_price", "((\"PurchasePrice\" >= (0)::numeric) AND (\"PurchasePrice\" < (1000000000)::numeric))");
+                        });
 
                     b.HasData(
                         new
@@ -1431,6 +1437,237 @@ namespace SmartHome.Migrations
                             ProductId = 5,
                             StringValue = "Датчик температуры и влажности для системы умного дома"
                         });
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Routes.Department", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TypeId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id")
+                        .HasName("department_pkey");
+
+                    b.HasIndex("TypeId");
+
+                    b.ToTable("department", (string)null);
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Routes.TechInput", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("ForQuantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("ParameterId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SourceId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StepId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id")
+                        .HasName("tech_input_pkey");
+
+                    b.HasIndex("ParameterId");
+
+                    b.HasIndex("SourceId");
+
+                    b.HasIndex("StepId", "SourceId")
+                        .IsUnique()
+                        .HasDatabaseName("tech_input_StepId_SourceId_key");
+
+                    b.ToTable("tech_input", null, t =>
+                        {
+                            t.HasCheckConstraint("tech_input_Amount_check", "((\"Amount\" > (0)::numeric) AND (\"Amount\" < (1000000000)::numeric))");
+
+                            t.HasCheckConstraint("tech_input_ForQuantity_check", "((\"ForQuantity\" > (0)::numeric) AND (\"ForQuantity\" < (1000000000)::numeric))");
+
+                            t.HasCheckConstraint("tech_input_check", "(\"StepId\" <> \"SourceId\")");
+                        });
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Routes.TechRouteSetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("FinalStepId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ParameterId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("ParameterValue")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RevisionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id")
+                        .HasName("tech_route_setting_pkey");
+
+                    b.HasIndex("FinalStepId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_tech_route_owner")
+                        .HasFilter("\"Kind\"<>'application'");
+
+                    b.HasIndex("ParameterId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("RevisionId");
+
+                    b.ToTable("tech_route_setting", null, t =>
+                        {
+                            t.HasCheckConstraint("tech_route_setting_Kind_check", "(\"Kind\" = ANY (ARRAY['standalone'::text, 'template'::text, 'application'::text]))");
+
+                            t.HasCheckConstraint("tech_route_setting_Name_check", "(length(TRIM(BOTH FROM \"Name\")) > 0)");
+
+                            t.HasCheckConstraint("tech_route_setting_check", "(((\"ParameterId\" IS NULL) AND (\"ParameterValue\" IS NULL)) OR ((\"ParameterId\" IS NOT NULL) AND (\"ParameterValue\" IS NOT NULL) AND (\"ParameterValue\" > (0)::numeric) AND (\"ParameterValue\" < (1000000000)::numeric)))");
+                        });
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Routes.TechStep", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("HourlyRate")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("OperationId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ProfessionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("QualificationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ResultName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("SetupMinutes")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Tooling")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UnitId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("UnitMinutes")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("WorkCenterId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id")
+                        .HasName("tech_step_pkey");
+
+                    b.HasIndex("OperationId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ProfessionId");
+
+                    b.HasIndex("QualificationId");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("WorkCenterId");
+
+                    b.ToTable("tech_step", null, t =>
+                        {
+                            t.HasCheckConstraint("tech_step_HourlyRate_check", "((\"HourlyRate\" >= (0)::numeric) AND (\"HourlyRate\" < (1000000000)::numeric))");
+
+                            t.HasCheckConstraint("tech_step_Kind_check", "(\"Kind\" = ANY (ARRAY['purchase'::text, 'production'::text]))");
+
+                            t.HasCheckConstraint("tech_step_ResultName_check", "(length(TRIM(BOTH FROM \"ResultName\")) > 0)");
+
+                            t.HasCheckConstraint("tech_step_SetupMinutes_check", "((\"SetupMinutes\" >= (0)::numeric) AND (\"SetupMinutes\" < (1000000000)::numeric))");
+
+                            t.HasCheckConstraint("tech_step_UnitMinutes_check", "((\"UnitMinutes\" >= (0)::numeric) AND (\"UnitMinutes\" < (1000000000)::numeric))");
+
+                            t.HasCheckConstraint("tech_step_check", "((\"Kind\" = 'purchase'::text) OR ((\"Number\" > 0) AND (\"OperationId\" IS NOT NULL) AND (\"WorkCenterId\" IS NOT NULL) AND (\"ProfessionId\" IS NOT NULL) AND (\"QualificationId\" IS NOT NULL)))");
+                        });
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Routes.WorkCenter", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TypeId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id")
+                        .HasName("work_center_pkey");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("TypeId");
+
+                    b.ToTable("work_center", (string)null);
                 });
 
             modelBuilder.Entity("SmartHome.Models.Bom.BomOrderLine", b =>
@@ -1667,6 +1904,126 @@ namespace SmartHome.Migrations
                     b.Navigation("EnumValue");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Routes.Department", b =>
+                {
+                    b.HasOne("SmartHome.Models.ClassNode", null)
+                        .WithMany()
+                        .HasForeignKey("TypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("department_TypeId_fkey");
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Routes.TechInput", b =>
+                {
+                    b.HasOne("SmartHome.Models.ParameterDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("ParameterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("tech_input_ParameterId_fkey");
+
+                    b.HasOne("SmartHome.Models.Routes.TechStep", null)
+                        .WithMany()
+                        .HasForeignKey("SourceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("tech_input_SourceId_fkey");
+
+                    b.HasOne("SmartHome.Models.Routes.TechStep", null)
+                        .WithMany()
+                        .HasForeignKey("StepId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("tech_input_StepId_fkey");
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Routes.TechRouteSetting", b =>
+                {
+                    b.HasOne("SmartHome.Models.Routes.TechStep", null)
+                        .WithMany()
+                        .HasForeignKey("FinalStepId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("tech_route_setting_FinalStepId_fkey");
+
+                    b.HasOne("SmartHome.Models.ParameterDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("ParameterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("tech_route_setting_ParameterId_fkey");
+
+                    b.HasOne("SmartHome.Models.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("tech_route_setting_ProductId_fkey");
+
+                    b.HasOne("SmartHome.Models.Bom.BomRevision", null)
+                        .WithMany()
+                        .HasForeignKey("RevisionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("tech_route_setting_RevisionId_fkey");
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Routes.TechStep", b =>
+                {
+                    b.HasOne("SmartHome.Models.ClassNode", null)
+                        .WithMany()
+                        .HasForeignKey("OperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("tech_step_OperationId_fkey");
+
+                    b.HasOne("SmartHome.Models.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("tech_step_ProductId_fkey");
+
+                    b.HasOne("SmartHome.Models.ClassNode", null)
+                        .WithMany()
+                        .HasForeignKey("ProfessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("tech_step_ProfessionId_fkey");
+
+                    b.HasOne("SmartHome.Models.EnumValue", null)
+                        .WithMany()
+                        .HasForeignKey("QualificationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("tech_step_QualificationId_fkey");
+
+                    b.HasOne("SmartHome.Models.MeasureUnit", null)
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("tech_step_UnitId_fkey");
+
+                    b.HasOne("SmartHome.Models.Routes.WorkCenter", null)
+                        .WithMany()
+                        .HasForeignKey("WorkCenterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("tech_step_WorkCenterId_fkey");
+                });
+
+            modelBuilder.Entity("SmartHome.Models.Routes.WorkCenter", b =>
+                {
+                    b.HasOne("SmartHome.Models.Routes.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("work_center_DepartmentId_fkey");
+
+                    b.HasOne("SmartHome.Models.ClassNode", null)
+                        .WithMany()
+                        .HasForeignKey("TypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("work_center_TypeId_fkey");
                 });
 
             modelBuilder.Entity("SmartHome.Models.Bom.BomOrder", b =>
