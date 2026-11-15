@@ -121,9 +121,9 @@ public class ClassNodesController : ControllerBase
     }
 
     [HttpGet("leaves")]
-    public async Task<ActionResult<IEnumerable<ClassNodeDto>>> GetLeaves()
+    public async Task<ActionResult<IEnumerable<ClassNodeDto>>> GetLeaves([FromQuery] bool productOnly = false)
     {
-        var leaves = await _context.ClassNodes
+        var leaves = await _context.ClassNodes.FromSqlRaw(productOnly ? "SELECT * FROM class_node WHERE NOT (route_branch(\"Id\",'route_operations') OR route_branch(\"Id\",'route_professions') OR route_branch(\"Id\",'route_departments') OR route_branch(\"Id\",'route_centers'))" : "SELECT * FROM class_node")
             .Include(x => x.MeasureUnit)
             .Where(x => x.IsTerminal)
             .OrderBy(x => x.SortOrder)

@@ -5,6 +5,7 @@ namespace SmartHome.Models;
 public class Product
 {
     public int Id { get; set; }
+    public decimal? PurchasePrice { get; set; }
 
     [Required]
     [MaxLength(256)]

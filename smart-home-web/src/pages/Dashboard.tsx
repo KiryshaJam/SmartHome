@@ -61,7 +61,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (v: AppView) => void }) 
           <button type="button" className="btn-ghost" onClick={() => onNavigate("classifier")}>
             Классификатор
           </button>
-          <button type="button" className="btn-primary" onClick={() => onNavigate("schema")}>
+          <button type="button" className="btn-secondary" onClick={() => onNavigate("schema")}>
             Справочники параметров
           </button>
           <button type="button" className="btn-warm" onClick={() => onNavigate("devices")}>

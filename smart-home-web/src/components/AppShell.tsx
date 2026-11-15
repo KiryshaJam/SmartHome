@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type AppView = "dashboard" | "classifier" | "schema" | "devices" | "search" | "orders";
+export type AppView = "dashboard" | "classifier" | "schema" | "devices" | "search" | "orders" | "routes";
 
 const nav: { id: AppView; label: string; desc: string }[] = [
   { id: "dashboard", label: "Обзор", desc: "Сводка и быстрые действия" },
@@ -8,6 +8,7 @@ const nav: { id: AppView; label: string; desc: string }[] = [
   { id: "schema", label: "Справочники", desc: "Группы, свойства и привязка к классам" },
   { id: "devices", label: "Изделия", desc: "Каталог и параметры изделий" },
   { id: "orders", label: "Заказы", desc: "Варианты, состав и сводные нормы" },
+  { id: "routes", label: "Маршруты", desc: "Операции и себестоимость партии" },
   { id: "search", label: "Поиск", desc: "Фильтрация по классу и параметрам" },
 ];
 
@@ -25,7 +26,7 @@ export function AppShell({
       <aside className="app-sidebar">
         <div>
           <div className="sidebar-brand">Умный дом</div>
-          <div className="sidebar-tagline">Каталог и параметры изделий</div>
+          <div className="sidebar-tagline">Изделия, спецификации и заказы</div>
         </div>
         <nav className="app-nav">
           {nav.map((item) => {
@@ -43,12 +44,6 @@ export function AppShell({
             );
           })}
         </nav>
-        <div className="sidebar-api">
-          API:{" "}
-          <span className="mono">
-            {import.meta.env.DEV ? "proxy /api → localhost:5156" : import.meta.env.VITE_API_URL ?? "—"}
-          </span>
-        </div>
       </aside>
       <main className="app-main">{children}</main>
     </div>

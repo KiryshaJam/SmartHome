@@ -247,7 +247,7 @@ export function ClassifierPage() {
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
                 <h2 className="subsection-title">{r.name}</h2>
                 {!tree && roots.length > 1 && (
-                  <button type="button" className="btn-primary" onClick={() => void loadTree(r.id)}>
+                  <button type="button" className="btn-secondary" onClick={() => void loadTree(r.id)}>
                     Показать дерево
                   </button>
                 )}

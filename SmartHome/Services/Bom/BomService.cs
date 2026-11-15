@@ -1,17 +1,40 @@
+using SmartHome.Models.Bom;
+using SmartHome.Bom;
+using SmartHome.DTOs.Bom;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SmartHome.Data;
 using SmartHome.Models;
+using Microsoft.EntityFrameworkCore.Storage;
+using Npgsql;
+using NpgsqlTypes;
+using System.Data;
 
-namespace SmartHome.Bom;
+namespace SmartHome.Services.Bom;
 
 public sealed class BomService(AppDbContext db)
 {
     public async Task Lock() => await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(734021,1)");
-    public async Task<BomRevision> Revision(int id) => await db.Set<BomRevision>().AsNoTracking().SingleOrDefaultAsync(x => x.Id == id)
-        ?? throw new ArgumentException("Версия спецификации не найдена.");
-    public async Task<BomRevision?> Latest(int productId) => await db.Set<BomRevision>().AsNoTracking().Where(x => x.ProductId == productId).OrderByDescending(x => x.Id).FirstOrDefaultAsync();
-    public async Task<SpecDocument> Effective(BomRevision r, int depth = 0)
+    private async Task<T> Scalar<T>(string sql, params NpgsqlParameter[] parameters)
+    {
+        var connection = db.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open) await db.Database.OpenConnectionAsync();
+        await using var command = connection.CreateCommand();
+        command.Transaction = db.Database.CurrentTransaction?.GetDbTransaction();
+        command.CommandText = sql;
+        foreach (var parameter in parameters) command.Parameters.Add(parameter);
+        return (T)(await command.ExecuteScalarAsync() ?? throw new ArgumentException("Исторический документ не найден."));
+    }
+    private async Task<RevisionDto> Hydrate(BomRevision r) => new(r.Id, r.ProductId, r.UnitId, r.PreviousId, r.BaseRevisionId, r.Reason, r.CreatedAt,
+        await Scalar<string>("SELECT bom_read_document(@id)::text", new NpgsqlParameter("id", r.Id)));
+    public async Task<RevisionDto> Revision(int id) => await Hydrate(await db.Set<BomRevision>().AsNoTracking().SingleOrDefaultAsync(x => x.Id == id && !x.IsConfigured && x.IsFinalized)
+        ?? throw new ArgumentException("Версия шаблона не найдена."));
+    public async Task<RevisionDto?> Latest(int productId)
+    {
+        var r = await db.Set<BomRevision>().AsNoTracking().Where(x => x.ProductId == productId && !x.IsConfigured && x.IsFinalized).OrderByDescending(x => x.Id).FirstOrDefaultAsync();
+        return r == null ? null : await Hydrate(r);
+    }
+    public async Task<SpecDocument> Effective(RevisionDto r, int depth = 0)
     {
         if (depth > 32) throw new ArgumentException("Слишком длинная цепочка модификаций.");
         var own = BomJson.Decode<SpecDocument>(r.Document);
@@ -52,7 +75,7 @@ public sealed class BomService(AppDbContext db)
         for (int? at = id; at != null; at = all[at.Value].ParentId) result.Add(at.Value);
         return result.ToArray();
     }
-    public async Task<BomRevision> Save(int productId, SpecWrite input, int? baseId = null)
+    public async Task<RevisionDto> Save(int productId, SpecWrite input, int? baseId = null)
     {
         var current = await Latest(productId);
         if (current?.Id != input.ExpectedRevisionId) throw new InvalidOperationException("Спецификация уже изменена. Обновите страницу.");
@@ -61,6 +84,9 @@ public sealed class BomService(AppDbContext db)
         var unit = await db.MeasureUnits.AsNoTracking().SingleOrDefaultAsync(x => x.Id == input.UnitId) ?? throw new ArgumentException("Выберите единицу количества изделия.");
         baseId ??= current?.BaseRevisionId;
         var basis = baseId == null ? null : await Effective(await Revision(baseId.Value));
+        var catalogParameters = await Parameters(productId);
+        var existingParameters = basis?.Parameters ?? (current == null ? null : (await Effective(current)).Parameters);
+        var parameters = input.Parameters ?? (existingParameters == null ? catalogParameters : existingParameters.Concat(catalogParameters.Where(p => !existingParameters.Any(e => e.DefinitionId == p.DefinitionId))).ToList());
         var doc = new SpecDocument
         {
             ProductName = product.Name,
@@ -69,11 +95,24 @@ public sealed class BomService(AppDbContext db)
             Positions = input.Positions,
             Rules = input.Rules,
             Calculations = input.Calculations,
-            Parameters = basis?.Parameters ?? await Parameters(productId)
+            Parameters = parameters
         };
+        foreach (var p in doc.Parameters)
+        {
+            if (p.Key != $"p{p.DefinitionId}" || p.Min > p.Max || p.EnumIds.Distinct().Count() != p.EnumIds.Length)
+                throw new ArgumentException("Неверный ключ, диапазон или перечисление параметра.");
+            if (p.Default is { } value && value.ValueKind != JsonValueKind.Null)
+            {
+                var typed = Typed(p, value); ValidateType(p, typed);
+                if (typed is decimal n && (p.Min != null && n < p.Min || p.Max != null && n > p.Max || p.Type == 5 && !p.EnumIds.Contains(checked((int)n))))
+                    throw new ArgumentException($"Значение по умолчанию параметра {p.Name} вне допустимых значений.");
+            }
+        }
         if (doc.Positions.Count > 500 || doc.Rules.Count > 100 || doc.Calculations.Count > 100) throw new ArgumentException("Слишком много позиций или правил.");
         foreach (var p in doc.Positions.Where(x => !x.Excluded))
         {
+            if (p.Amount <= 0 || p.Amount > 1_000_000_000 || p.ForQuantity <= 0 || p.ForQuantity > 1_000_000_000 || p.Amount / p.ForQuantity > 1_000_000_000)
+                throw new ArgumentException("Норма и знаменатель должны быть положительными и ограниченными.");
             if (p.RevisionId == 0) p.RevisionId = (await Latest(p.ComponentId))?.Id ?? throw new ArgumentException("Сначала задайте единицу и сохраните спецификацию компонента.");
             var child = await Revision(p.RevisionId);
             if (child.ProductId != p.ComponentId || child.UnitId != p.UnitId) throw new ArgumentException("Единица или версия не соответствует компоненту.");
@@ -93,8 +132,12 @@ public sealed class BomService(AppDbContext db)
         }
         var effectivePositions = (basis?.Positions ?? []).Where(x => !doc.Positions.Any(o => o.Id == x.Id)).Concat(doc.Positions).Where(x => !x.Excluded).ToList();
         CheckExpressions(doc, effectivePositions);
-        var r = new BomRevision { ProductId = productId, UnitId = input.UnitId, PreviousId = current?.Id, BaseRevisionId = baseId, Reason = input.Reason.Trim(), Document = BomJson.Encode(doc) };
-        db.Add(r); await db.SaveChangesAsync(); return r;
+        var revisionId = await Scalar<int>("SELECT register_change(@product,@unit,@previous,@base,@document,@reason)",
+            new NpgsqlParameter("product", productId), new NpgsqlParameter("unit", input.UnitId),
+            new NpgsqlParameter("previous", NpgsqlDbType.Integer) { Value = (object?)current?.Id ?? DBNull.Value },
+            new NpgsqlParameter("base", NpgsqlDbType.Integer) { Value = (object?)baseId ?? DBNull.Value },
+            new NpgsqlParameter("document", NpgsqlDbType.Jsonb) { Value = BomJson.Encode(doc) }, new NpgsqlParameter("reason", input.Reason.Trim()));
+        return await Revision(revisionId);
     }
     private static Dictionary<string, object> Sample(List<SpecParameter> ps) => ps.ToDictionary(x => x.Key, x => x.Type switch { 1 or 2 or 5 => (object)1m, 4 => DateTime.UnixEpoch, _ => "sample" });
     private static object Eval(string text, Dictionary<string, object> values, HashSet<int>? included = null, bool typeOnly = false) =>
@@ -200,6 +243,7 @@ public sealed class BomService(AppDbContext db)
             if (pos.ChildVariantId is int cv)
             {
                 child = BomJson.Decode<ResolvedNode>((await Variant(cv)).Snapshot);
+                child.ConfiguredRevisionId = cv;
                 CheckTree(child, path, depth + 1);
             }
             else
@@ -223,12 +267,41 @@ public sealed class BomService(AppDbContext db)
         if (depth > 32 || !copy.Add(n.ProductId)) throw new ArgumentException("Цикл во вложенном варианте.");
         foreach (var c in n.Children) CheckTree(c, copy, depth + 1);
     }
-    public async Task<BomVariant> Variant(int id) => await db.Set<BomVariant>().AsNoTracking().SingleOrDefaultAsync(x => x.Id == id) ?? throw new ArgumentException("Вариант не найден.");
-    public async Task<BomVariant> CreateVariant(VariantWrite input)
+    public async Task<VariantDto> Variant(int id)
+    {
+        var v = await db.Set<BomRevision>().AsNoTracking().SingleOrDefaultAsync(x => x.Id == id && x.IsConfigured && x.IsFinalized) ?? throw new ArgumentException("Исполнение не найдено.");
+        return new(v.Id, v.SourceRevisionId!.Value, v.Name ?? "Вложенное исполнение", v.CreatedAt,
+            await Scalar<string>("SELECT bom_read_variant(@id)::text", new NpgsqlParameter("id", id)));
+    }
+    public async Task<VariantDto> CreateVariant(VariantWrite input)
     {
         if (string.IsNullOrWhiteSpace(input.Name) || input.Name.Length > 256) throw new ArgumentException("Укажите имя варианта до 256 символов.");
         var tree = await Resolve(input.RevisionId, input.Values);
-        var variant = new BomVariant { RevisionId = input.RevisionId, Name = input.Name.Trim(), Snapshot = BomJson.Encode(tree) };
-        db.Add(variant); await db.SaveChangesAsync(); return variant;
+        var id = await Scalar<int>("SELECT bom_create_variant(@revision,@name,@snapshot)",
+            new NpgsqlParameter("revision", input.RevisionId), new NpgsqlParameter("name", input.Name.Trim()),
+            new NpgsqlParameter("snapshot", NpgsqlDbType.Jsonb) { Value = BomJson.Encode(tree) });
+        return await Variant(id);
+    }
+    public Task<object> Tree(int id, decimal quantity) => Query("find_bom", ("id", id, NpgsqlDbType.Integer), ("q", quantity, NpgsqlDbType.Numeric));
+    public Task<object> Totals(int id, decimal quantity, int? classId) => Query("calc_bom", ("id", id, NpgsqlDbType.Integer), ("q", quantity, NpgsqlDbType.Numeric), ("c", classId, NpgsqlDbType.Integer));
+    public Task<object> OrderTotals(int id, int? classId) => Query("calc_order_bom", ("id", id, NpgsqlDbType.Integer), ("c", classId, NpgsqlDbType.Integer));
+
+    private async Task<object> Query(string function, params (string name, object? value, NpgsqlDbType type)[] args)
+    {
+        await db.Database.OpenConnectionAsync();
+        await using var cmd = new NpgsqlCommand($"SELECT coalesce(jsonb_agg(t),'[]'::jsonb)::text FROM {function}({string.Join(',', args.Select(x => "@" + x.name))}) t", (NpgsqlConnection)db.Database.GetDbConnection());
+        foreach (var a in args) cmd.Parameters.AddWithValue(a.name, a.type, a.value ?? DBNull.Value);
+        using var document = JsonDocument.Parse((string)(await cmd.ExecuteScalarAsync())!);
+        return document.RootElement.Clone();
+    }
+    public async Task<object> CreateModification(ModificationWrite input)
+    {
+        if (string.IsNullOrWhiteSpace(input.Name) || string.IsNullOrWhiteSpace(input.ShortName) || input.Name.Length > 256 || input.ShortName.Length > 128) throw new ArgumentException("Укажите имя и обозначение модификации.");
+        var r = await Revision(input.BaseRevisionId);
+        var basis = await db.Products.AsNoTracking().SingleAsync(x => x.Id == r.ProductId);
+        var p = new Product { Name = input.Name.Trim(), ShortName = input.ShortName.Trim(), ClassNodeId = basis.ClassNodeId }; db.Add(p); await db.SaveChangesAsync();
+        var doc = await Effective(r);
+        var created = await Save(p.Id, new SpecWrite { UnitId = r.UnitId, Reason = input.Reason, Rules = doc.Rules, Calculations = doc.Calculations }, r.Id);
+        return new { productId = p.Id, revision = created };
     }
 }

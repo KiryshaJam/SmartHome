@@ -4,6 +4,8 @@ namespace SmartHome.DTOs;
 
 public class CreateProductDto
 {
+    public decimal? PurchasePrice { get; set; }
+
     [Required]
     [MaxLength(256)]
     public string Name { get; set; } = null!;

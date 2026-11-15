@@ -32,7 +32,7 @@ BEGIN
  IF EXISTS(SELECT 1 FROM product WHERE "Name"='sql-bom-check-bad') THEN RAISE EXCEPTION 'Partial modification left behind'; END IF;
 END $$;
 DO $$
-DECLARE cls int; unit int; other_unit int; root_id int; comp_id int; leaf_rev int; base_rev int; mod_id int; mod_rev int; d jsonb; p jsonb;
+DECLARE cls int; unit int; other_unit int; root_id int; comp_id int; leaf_rev int; base_rev int; mod_id int; mod_rev int; d jsonb; p jsonb; violated_constraint text;
 BEGIN
  SELECT "Id" INTO cls FROM class_node WHERE "IsTerminal" ORDER BY "Id" LIMIT 1;
  SELECT "Id" INTO unit FROM measure_unit ORDER BY "Id" LIMIT 1;
@@ -56,11 +56,23 @@ BEGIN
  BEGIN
  PERFORM register_change(root_id,unit,base_rev,NULL,jsonb_set(d,'{positions}',jsonb_build_array(jsonb_set(p,'{forQuantity}','0'))),'Zero denominator');
  RAISE EXCEPTION 'Test failed: zero denominator';
- EXCEPTION WHEN raise_exception THEN IF SQLERRM='Test failed: zero denominator' THEN RAISE; END IF; END;
+ EXCEPTION
+ WHEN check_violation THEN
+  GET STACKED DIAGNOSTICS violated_constraint = CONSTRAINT_NAME;
+  IF violated_constraint IS DISTINCT FROM 'CK_bom_position_content' THEN RAISE; END IF;
+ WHEN raise_exception THEN
+  -- The pre-normalization guard used this precise application error.
+  IF SQLERRM <> 'Нормы должны быть положительными и ограниченными.' THEN RAISE; END IF;
+ END;
  BEGIN
  PERFORM register_change(root_id,unit,base_rev,NULL,jsonb_set(d,'{positions}',jsonb_build_array(jsonb_set(p,'{unitId}',to_jsonb(other_unit)))),'Wrong unit');
  RAISE EXCEPTION 'Test failed: wrong unit';
- EXCEPTION WHEN raise_exception THEN IF SQLERRM='Test failed: wrong unit' THEN RAISE; END IF; END;
+ EXCEPTION WHEN raise_exception THEN
+  -- The normalized import wraps the pinned component/revision/unit FK in P0001.
+  IF SQLERRM <> 'Компонент, версия и единица не согласованы.'
+   AND SQLERRM NOT LIKE 'bom_document id %: dangling historical reference (%"FK_bom_position_child"%). No catalog data was substituted.'
+  THEN RAISE; END IF;
+ END;
  BEGIN
  DELETE FROM product WHERE "Id"=comp_id;
  RAISE EXCEPTION 'Test failed: used component deleted';

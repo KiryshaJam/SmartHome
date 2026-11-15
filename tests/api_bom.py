@@ -44,6 +44,15 @@ rules=[dict(expression=f'{wk} == "wired" OR {wk} == "radio"',message='Unknown mo
 save(child,child_positions,rules,{ck:f'{nk} * 3'})
 values1={nk:2,wk:'wired'};values2={nk:3,wk:'radio'}
 v1=variant(child,values1);v2=variant(child,values2)
+# Relational persistence retains the existing string-valued JSON transport.
+revision_payload=spec(child)['revision']
+assert isinstance(revision_payload['document'],str)
+assert isinstance(json.loads(revision_payload['document'])['positions'],list)
+assert 'documentId' not in revision_payload and 'creationTransaction' not in revision_payload
+for saved_variant in (v1,v2,request('GET',f'/bom/variants/{v1["id"]}')):
+    assert isinstance(saved_variant['snapshot'],str)
+    assert 'source' not in json.loads(saved_variant['snapshot'])
+    assert 'creationTransaction' not in saved_variant
 assert amounts(v1['id'],3,material_class)=={cable:12,bolt:6,board:3}
 assert amounts(v2['id'],2,material_class)=={radio:2,bolt:4,board:2}
 for bad in [{},{nk:0,wk:'wired'},{nk:11,wk:'wired'},{nk:'two',wk:'wired'},{nk:2.5,wk:'wired'},{nk:1e100,wk:'wired'},{nk:5,wk:'radio'},{nk:2,wk:'invalid'},{nk:2,wk:'wired','p999999':1}]: variant(child,bad,status=(400,))
@@ -65,10 +74,13 @@ assert amounts(v1['id'],1,material_class)=={cable:4,bolt:2,board:1}
 # Modification as a configured nested component.
 save(kit,[pos('mod',mod,bindings={nk:nk,wk:wk})])
 assert amounts(variant(kit,values2)['id'],1,material_class)=={radio:1,bolt:5}
-# Freeze orders and all nested definitions.
-order=request('POST','/bom/orders',dict(number=prefix+'order',date='2026-11-02',expectedRevisionId=None,reason='Two variants',lines=[dict(variantId=v1['id'],quantity=3),dict(variantId=v2['id'],quantity=2)]))
-oid=order['order']['id'];orid=order['revision']['id']
-old_totals=request('GET',f'/bom/order-revisions/{orid}/totals?classId={material_class}')
+# Orders keep current lines; configured specifications remain immutable.
+order=request('POST','/bom/orders',dict(number=prefix+'order',date='2026-11-02',expectedUpdateToken=None,lines=[dict(variantId=v1['id'],quantity=3),dict(variantId=v2['id'],quantity=2)]))
+oid=order['order']['id'];token=order['order']['updateToken']
+assert request('GET',f'/bom/orders/{oid}')==order
+assert len(order['lines'])==2
+request('GET','/bom/orders/2147483647',expected=(404,))
+old_totals=request('GET',f'/bom/orders/{oid}/totals?classId={material_class}')
 assert {x['product_id']:x['required_quantity'] for x in old_totals}=={cable:12,bolt:10,board:5,radio:2}
 old_revision=spec(child)['revision']['id']
 changed=copy.deepcopy(child_positions);changed[0]['formula']=f'{nk} * 5'
@@ -76,15 +88,29 @@ save(child,changed,rules)
 assert amounts(variant(child,values1)['id'],1,material_class)[cable]==10
 assert amounts(v1['id'],1,material_class)[cable]==4
 assert amounts(variant(mod,values1)['id'],1,material_class)[cable]==4
-assert old_totals==request('GET',f'/bom/order-revisions/{orid}/totals?classId={material_class}')
-assert request('GET',f'/bom/products/{child}?revisionId={old_revision}')['effective']['positions'][0]['formula']==f'{nk} * 2'
-# Explicit atomic order recalculation creates a new history entry.
+assert old_totals==request('GET',f'/bom/orders/{oid}/totals?classId={material_class}')
+historical_spec=request('GET',f'/bom/products/{child}?revisionId={old_revision}')
+assert historical_spec['revision']['id']==old_revision
+# Equal sortOrder does not identify a position; use its stable key.
+historical_cable=[p for p in historical_spec['effective']['positions'] if p['id']=='cable']
+assert len(historical_cable)==1, historical_spec
+assert historical_cable[0]['componentId']==cable, historical_cable
+assert historical_cable[0]['formula']==f'{nk} * 2', historical_cable
 newv=variant(child,values1)
-request('PUT',f'/bom/orders/{oid}',dict(number=prefix+'order',date='2026-11-02',expectedRevisionId=orid,reason='Recalculate',lines=[dict(variantId=newv['id'],quantity=2)]))
-assert len(request('GET',f'/bom/orders/{oid}')['history'])==2
-request('PUT',f'/bom/orders/{oid}',dict(number=prefix+'order',date='2026-11-02',expectedRevisionId=orid,reason='Stale',lines=[dict(variantId=v1['id'],quantity=1)]),expected=(409,))
-request('POST','/bom/orders',dict(number=prefix+'bad',date='2026-11-02',reason='invalid',lines=[dict(variantId=v1['id'],quantity=-1)]),expected=(400,))
+request('PUT',f'/bom/orders/{oid}',dict(number=prefix+'order',date='2026-11-02',expectedUpdateToken=token,lines=[dict(variantId=newv['id'],quantity=2)]))
+assert request('GET',f'/bom/orders/{oid}')['order']['updateToken']==token+1
+request('PUT',f'/bom/orders/{oid}',dict(number=prefix+'order',date='2026-11-02',expectedUpdateToken=token,lines=[dict(variantId=v1['id'],quantity=1)]),expected=(409,))
+request('POST','/bom/orders',dict(number=prefix+'bad',date='2026-11-02',lines=[dict(variantId=v1['id'],quantity=-1)]),expected=(400,))
 assert all(o['number']!=prefix+'bad' for o in request('GET','/bom/orders'))
+current_order=request('GET',f'/bom/orders/{oid}')['order']['updateToken']
+duplicate_lines=[dict(variantId=v1['id'],quantity=1.25),dict(variantId=v1['id'],quantity=2.5)]
+body=dict(number=prefix+'order',date='2026-11-02',expectedUpdateToken=current_order,lines=duplicate_lines)
+with ThreadPoolExecutor(2) as pool:
+    results=list(pool.map(lambda _:request('PUT',f'/bom/orders/{oid}',body,expected=(200,409)),range(2)))
+assert sum(result is not None and 'order' in result for result in results)==1
+saved=request('GET',f'/bom/orders/{oid}')
+assert saved['order']['updateToken']==current_order+1 and saved['lines']==duplicate_lines
+assert request('GET',f'/bom/orders/{oid}/totals')==totals(v1['id'],3.75)
 # Static validation of runtime-edited expressions, unknowns, types and cycles.
 for expr in ['p999999 + 2',f'{wk} * 2','1 +','System.IO.File.Delete("x")',r'"\q"']:
     bad=copy.deepcopy(changed);bad[0]['formula']=expr
@@ -135,9 +161,16 @@ good={**values1,f'p{en}':4,f'p{dt1}':'2026-01-01T03:00:00+03:00',f'p{dt2}':'2026
 variant(child,good)
 for key,val in [(f'p{en}',999999),(f'p{dt1}','2026-01-01T03:00:00'),(f'p{dt2}','2025-01-01T00:00:00Z')]:
     variant(child,{**good,key:val},status=(400,))
-# Child defaults and new rules cannot alter the frozen order.
-assert old_totals==request('GET',f'/bom/order-revisions/{orid}/totals?classId={material_class}')
-print('BOM: deep configuration, formulas, modifications, immutable orders, types, cycles and concurrency passed.')
-# Reproducible fixture identifiers for SQL/API cross-checks and restart verification.
+# A revision-specific enum subset is a relation, not the entire current catalog.
+current_spec=spec(child)
+limited=copy.deepcopy(current_spec['parameters'])
+next(p for p in limited if p['definitionId']==en)['enumIds']=[4]
+request('PUT',f'/bom/products/{child}',dict(expectedRevisionId=current_spec['revision']['id'],unitId=unit,reason='Enum subset',parameters=limited,positions=changed,rules=rules,calculations={}))
+variant(child,{**values1,f'p{en}':4})
+variant(child,{**values1,f'p{en}':5},status=(400,))
+# New template definitions cannot alter the fixed current order lines.
+expected_current=totals(v1['id'],3.75,material_class)
+assert expected_current==request('GET',f'/bom/orders/{oid}/totals?classId={material_class}')
+print('BOM: deep configuration, formulas, modifications, fixed orders, enum subsets, types, cycles and concurrency passed.')
 if '--fixture' in sys.argv:
-    print(json.dumps(dict(variant=v1['id'],orderRevision=orid,materialClass=material_class,expected=old_totals)))
+    print(json.dumps(dict(variant=v1['id'],order=oid,materialClass=material_class,expected=expected_current)))
